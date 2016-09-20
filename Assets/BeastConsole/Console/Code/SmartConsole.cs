@@ -108,56 +108,21 @@ public class SmartConsole : MonoBehaviour
     /// </summary>
     public class Variable<T> : Command where T : new()
     {
-        Action<T> OnChanged;
         CFG.Variable<T> configVar;
 
-        public Variable(string name)
+        public Variable(CFG.Variable<T> var)
         {
-            Initialise(name, "",  null);
+            configVar = var;
+            m_callback = CommandFunction;
         }
-
-        public Variable(string name, string description)
-        {
-            Initialise(name, description, null);
-        }
-
-        public Variable(string name, string description,  Action<T> callback)
-        {
-            Initialise(name, description, callback);
-        }
-
         public void Set(T val) // SE: I don't seem to know enough C# to provide a user friendly assignment operator solution
         {
             configVar.Set(val);
-            if (OnChanged != null)
-                OnChanged(val);
         }
 
         public static implicit operator T(Variable<T> var)
         {
             return var.configVar;
-        }
-
-        private void Initialise(string name, string description, Action<T> callback)
-        {
-            m_name = name;
-            m_help = description;
-            m_paramsExample = "";
-            m_callback = CommandFunction;
-            OnChanged = callback;
-        }
-
-        public void AddCallback(Action<T> c)
-        {
-            OnChanged += c;
-        }
-        public void RemoveCallback(Action<T> c)
-        {
-            OnChanged -= c;
-        }
-        public void ClearCallbacks()
-        {
-            OnChanged = null;
         }
 
         private static void CommandFunction(string parameters)
@@ -173,7 +138,7 @@ public class SmartConsole : MonoBehaviour
                     conjunction = " has been set to ";
                 }
 
-                WriteLine(variable.m_name + conjunction + variable.m_value);
+                WriteLine(variable.configVar.name + conjunction + variable.configVar.value);
             }
         }
 
@@ -436,74 +401,26 @@ public class SmartConsole : MonoBehaviour
         RegisterCommand(name, "", "(no description)", callback);
     }
 
-    /// <summary>
-    /// Create a console variable
-    /// e.g. SmartConsole.Variable< bool > showFPS = SmartConsole.CreateVariable< bool >( "show.fps", "whether to draw framerate counter or not", false );
-    /// </summary>
-    public static Variable<T> CreateVariable<T>(string name, string description, Action<T> callback) where T : new()
+    public static void RegisterVariable<T>(CFG.Variable<T> var) where T : new()
     {
-        if (s_variableDictionary.ContainsKey(name))
+        if (s_variableDictionary.ContainsKey(var.name))
         {
             Debug.LogError("Tried to add already existing console variable!");
-            return null;
+            return ;
         }
 
-        Variable<T> returnValue = new Variable<T>(name, description, callback);
-        s_variableDictionary.Add(name, returnValue);
-        s_masterDictionary.Add(name, returnValue);
-
-        return returnValue;
+        Variable<T> returnValue = new Variable<T>(var);
+        s_variableDictionary.Add(var.name, returnValue);
+        s_masterDictionary.Add(var.name, returnValue);
     }
 
     /// <summary>
     /// Create a console variable without specifying a default value
     /// e.g. SmartConsole.Variable< float > gameSpeed = SmartConsole.CreateVariable< float >( "game.speed", "the current speed of the game" );
     /// </summary>
-    public static Variable<T> CreateVariable<T>(string name, string description) where T : new()
+    public static Variable<T> CreateVariable<T>(CFG.Variable<T> var) where T : new()
     {
-        return CreateVariable<T>(name, description,  null);
-    }
-
-    /// <summary>
-    /// Create a console variable without specifying a description or default value
-    /// e.g. SmartConsole.Variable< string > someString = SmartConsole.CreateVariable< string >( "some.string" );
-    /// </summary>
-    public static Variable<T> CreateVariable<T>(string name) where T : new()
-    {
-        return CreateVariable<T>(name, "");
-    }
-
-    public static void AddVarCallback<T>(string name, Action<T> callback) where T : new()
-    {
-        if (!s_variableDictionary.ContainsKey(name))
-        {
-            Debug.LogError("Attempt to set callback for non registered variable: " + name);
-            return;
-        }
-        var v = s_variableDictionary[name] as Variable<T>;
-        v.AddCallback(callback);
-    }
-
-    public static void RemoveVarCallback<T>(string name, Action<T> callback) where T : new()
-    {
-        if (!s_variableDictionary.ContainsKey(name))
-        {
-            Debug.LogError("Attempt to remove callback for non registered variable: " + name);
-            return;
-        }
-        var v = s_variableDictionary[name] as Variable<T>;
-        v.RemoveCallback(callback);
-    }
-
-    public static void ClearVarCallbacks<T>(string name) where T : new()
-    {
-        if (!s_variableDictionary.ContainsKey(name))
-        {
-            Debug.LogError("Attempt to clear callbacks for non registered variable: " + name);
-            return;
-        }
-        var v = s_variableDictionary[name] as Variable<T>;
-        v.ClearCallbacks();
+        return CreateVariable<T>(var);
     }
 
     /// <summary>
