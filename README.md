@@ -80,4 +80,9 @@ Or use lambdas
 CFG.vsync.OnChanged += x => QualitySettings.vSyncCount = x == true ? 1 : 0;
 CFG.fov.OnChanged += x => Camera.main.fieldOfView = x;
 ```
+To get the value we just use =
+``` csharp
+int currentFramerate = CFG.fps
+```
+
 
