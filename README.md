@@ -2,6 +2,7 @@
 ![License MIT](https://img.shields.io/badge/license-MIT-green.svg)
 
 #BeastConsole
+![screen](http://i.imgur.com/Djw2FPc.png)
 
 This project is possible because of the effort of amazing people at Cranium Software
 this project is based of SmartConsole https://github.com/CraniumSoftware/SmartConsole
@@ -16,6 +17,11 @@ BeastConsole is a suite of components:
   * Alternative log layer allowing you to catch all unity logs in runtime build in console to avoid using developer build.
 
 There a lot of very useful features and ways to use it that i will expand in this doc with time.
+
+**Dependencies:** 
+* DOTween for tweening
+* SmartConsole (embedded) 
+
 
 #Console
 * 80% of it is created by folks at CraniumSoftware
