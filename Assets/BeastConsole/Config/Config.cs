@@ -30,11 +30,13 @@ public static partial class CFG
 
     #region Graphics
     public static Variable<int> targetFramerate;
+    public static Variable<bool> vsync;
     public static Variable<int> currentFPS;
     public static Variable<int> minFPS;
     public static Variable<int> maxFPS;
     public static Variable<float> avgFPS;
     public static Variable<float> fov;
+    public static Variable<bool> showfps;
     #endregion
 
     #region Controls
@@ -53,9 +55,21 @@ public static partial class CFG
     static void reg_GFX()
     {
         targetFramerate = new Variable<int>(GraphicsGroup, "targetfps", "set max fps for game",  true);
+        targetFramerate.SetSilent(Application.targetFrameRate);
+        targetFramerate.OnChanged += SetTargetFramerate;
         NewSettingsVar(targetFramerate as VariableBase, 0f, 300f);
 
+        vsync = new Variable<bool>(GraphicsGroup, "vsync", "set vertical synchronization", true);
+        vsync.SetSilent(QualitySettings.vSyncCount == 1 || QualitySettings.vSyncCount == 1 ? true : false);
+        CFG.vsync.OnChanged += x => QualitySettings.vSyncCount = x == true ? 1 : 0;
+
         fov = new Variable<float>("", "fov", "Set field of view",  true);
+        fov.SetSilent(Camera.main.fieldOfView);
+        fov.OnChanged += x => Camera.main.fieldOfView = x;
+
+        showfps = new Variable<bool>("", "showfps", "Shows fps numbers", true);
+        
+
     }
 
     static void reg_PLAYER()
@@ -78,6 +92,9 @@ public static partial class CFG
     {
         output_unity_log = new Variable<bool>("log", "output_unity_log",  "relay log messages to unity logger", true);
         currentFPS = new Variable<int>("", "fps", "current fps", false);
+        minFPS = new Variable<int>("", "minfps", "", false);
+        minFPS.Set(60);
+        maxFPS = new Variable<int>("", "maxfps", "", false);
     }
 
     static void reg_AUDIO()
@@ -101,6 +118,7 @@ public static partial class CFG
         NewSettingsVar(voiceVolume as VariableBase, 0f, 100f);
     }
 
-
+    static void SetTargetFramerate(int val)
+    { Application.targetFrameRate = val; }
 }
 

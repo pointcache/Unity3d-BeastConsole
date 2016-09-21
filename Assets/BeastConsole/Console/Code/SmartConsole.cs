@@ -76,28 +76,18 @@ public class SmartConsole : MonoBehaviour
         /// The font used to render the console
         /// </summary>
         public KeyCode ConsoleKey;
-        public Font m_font;
-        public float k_animTime = 0.4f;
-        public float k_lineSpace = 0.05f;
-        public int k_historyLines = 120;
-        
-        public GameObject entryTemplate;
-        public GameObject consoleContent;
-        public RectTransform consoleRoot;
-        public InputField inputField;
-        public Scrollbar scrollBar;
-        public Vector2 startPos;
-        public Vector2 endPos;
+        public float tweenTime = 0.4f;
+        public int maxConsoleLines = 120;
+         
     }
+
+    public static GameObject entryTemplate;
+    public static GameObject consoleContent;
+    public static RectTransform consoleRoot;
+    public static InputField inputField;
+    public static Scrollbar scrollBar;
 
     private static Queue<SmartConsoleEntry> entries = new Queue<SmartConsoleEntry>();
-
-    public static SmartConsole New(Options _opts)
-    {
-        GameObject go = new GameObject("SmartConsole");
-        options = _opts;
-        return go.AddComponent<SmartConsole>();
-    }
 
     // SE - this is a bit elaborate, needed to provide a way to do this
     // without relying on memory addresses or pointers... which has resulted in
@@ -113,6 +103,8 @@ public class SmartConsole : MonoBehaviour
         public Variable(CFG.Variable<T> var)
         {
             configVar = var;
+            m_name = var.name;
+            m_help = var.description;
             m_callback = CommandFunction;
         }
         public void Set(T val) // SE: I don't seem to know enough C# to provide a user friendly assignment operator solution
@@ -172,17 +164,13 @@ public class SmartConsole : MonoBehaviour
             return;
         }
 
-        if (options.m_font == null)
-        {
-            Debug.LogError("SmartConsole requires a font to be set in the inspector");
-        }
         Initialise(this);
 
-        options.consoleRoot.anchorMin = new Vector2(0f, 0.65f);
-        options.consoleRoot.anchorMax = new Vector2(1f, 1f);
-        rect = options.consoleRoot;
+        consoleRoot.anchorMin = new Vector2(0f, 0.65f);
+        consoleRoot.anchorMax = new Vector2(1f, 1f);
+        
     }
-    bool consoleShown; RectTransform rect;
+    bool consoleShown;
     bool inputTargeted;
     void Update()
     {
@@ -198,15 +186,15 @@ public class SmartConsole : MonoBehaviour
         {
             if (!consoleShown)
             {
-                options.inputField.gameObject.SetActive(true);
+                inputField.gameObject.SetActive(true);
                 if (!inputTargeted)
                 {
-                    options.inputField.Select();
-                    options.inputField.ActivateInputField();
+                    inputField.Select();
+                    inputField.ActivateInputField();
                     inputTargeted = true;
                 }
 
-                rect.DOAnchorPos(options.endPos, options.k_animTime);
+                consoleRoot.DOAnchorPos(Vector3.zero, options.tweenTime);
 
 
                 consoleShown = true;
@@ -214,12 +202,12 @@ public class SmartConsole : MonoBehaviour
             }
             else
             {
-                options.inputField.text = "";
-                options.inputField.gameObject.SetActive(false);
+                inputField.text = "";
+                inputField.gameObject.SetActive(false);
                 inputTargeted = false;
 
-                rect.DOAnchorPos(new Vector2(0, -rect.rect.y * 2), options.k_animTime);
-                options.scrollBar.value = 0;
+                consoleRoot.DOAnchorPos(new Vector2(0, -consoleRoot.rect.y * 2), options.tweenTime);
+                scrollBar.value = 0;
                 consoleShown = false;
                 CFG.consoleOpened.Set(false);
             }
@@ -227,11 +215,11 @@ public class SmartConsole : MonoBehaviour
 
         }
 
-        if (options.inputField.isFocused)
+        if (inputField.isFocused)
         {
             if (Input.GetKeyDown(KeyCode.Tab))
             {
-                AutoComplete(options.inputField.text);
+                AutoComplete(inputField.text);
             }
         }
         s_showConsole = false;
@@ -239,7 +227,7 @@ public class SmartConsole : MonoBehaviour
 
     static void delete_back_to_dot()
     {
-        string text = options.inputField.text;
+        string text = inputField.text;
 
         if (text.Contains("."))
         {
@@ -251,7 +239,7 @@ public class SmartConsole : MonoBehaviour
         {
             text = "";
         }
-        options.inputField.text = text;
+        inputField.text = text;
     }
 
     /// <summary>
@@ -297,7 +285,7 @@ public class SmartConsole : MonoBehaviour
     public static void WriteLine(string message)
     {
         SmartConsoleEntry entry = null;
-        if (entries.Count > options.k_historyLines)
+        if (entries.Count > options.maxConsoleLines)
         {
             entry = entries.Dequeue().GetComponent<SmartConsoleEntry>();
 
@@ -307,9 +295,9 @@ public class SmartConsole : MonoBehaviour
         }
         else
         {
-            entry = Instantiate(options.entryTemplate).GetComponent<SmartConsoleEntry>();
+            entry = Instantiate(entryTemplate).GetComponent<SmartConsoleEntry>();
             entries.Enqueue(entry);
-            entry.transform.SetParent(options.consoleContent.transform, true);
+            entry.transform.SetParent(consoleContent.transform, true);
             entry.transform.SetAsLastSibling();
         }
 
@@ -329,10 +317,10 @@ public class SmartConsole : MonoBehaviour
         while (i < 2)
         {
             i++;
-            options.scrollBar.value = 0;
+            scrollBar.value = 0;
             yield return null;
         }
-        options.scrollBar.value = 0;
+        scrollBar.value = 0;
         yield break;
     }
 
@@ -414,19 +402,11 @@ public class SmartConsole : MonoBehaviour
         s_masterDictionary.Add(var.name, returnValue);
     }
 
-    /// <summary>
-    /// Create a console variable without specifying a default value
-    /// e.g. SmartConsole.Variable< float > gameSpeed = SmartConsole.CreateVariable< float >( "game.speed", "the current speed of the game" );
-    /// </summary>
-    public static Variable<T> CreateVariable<T>(CFG.Variable<T> var) where T : new()
-    {
-        return CreateVariable<T>(var);
-    }
 
     /// <summary>
     /// Destroy a console variable (so its name can be reused)
     /// </summary>
-    public static void DestroyVariable<T>(Variable<T> variable) where T : new()
+    public static void UnregisterVariable<T>(Variable<T> variable) where T : new()
     {
         s_variableDictionary.Remove(variable.m_name);
         s_masterDictionary.Remove(variable.m_name);
@@ -537,8 +517,7 @@ public class SmartConsole : MonoBehaviour
         Application.logMessageReceived += LogHandler;
 #endif
         InitialiseCommands();
-        InitialiseVariables();
-        options.inputField.onEndEdit.AddListener(delegate { HandleTextInput(options.inputField.text); });
+        inputField.onEndEdit.AddListener(delegate { HandleTextInput(inputField.text); });
     }
 
     static int s_currentEXECUTIONhistoryIndex = 0;
@@ -556,8 +535,8 @@ public class SmartConsole : MonoBehaviour
             if (s_commandHistory.Count > 0)
             {
                 s_currentEXECUTIONhistoryIndex = Mathf.Clamp(s_currentEXECUTIONhistoryIndex, 0, s_commandHistory.Count - 1);
-                options.inputField.text = s_commandHistory[s_currentEXECUTIONhistoryIndex];
-                options.inputField.caretPosition = options.inputField.text.Length;
+                inputField.text = s_commandHistory[s_currentEXECUTIONhistoryIndex];
+                inputField.caretPosition = inputField.text.Length;
                 s_currentEXECUTIONhistoryIndex--;
             }
         }
@@ -581,20 +560,12 @@ public class SmartConsole : MonoBehaviour
         RegisterCommand("callstack.exception", "display the call stack for the last exception message", LastExceptionCallStack);
     }
 
-    private static void InitialiseVariables()
-    {
-        //s_drawFPS = CreateVariable< bool >( "show.fps", "whether to draw framerate counter or not", false, null );
-        //s_drawFullConsole = CreateVariable< bool >( "console.fullscreen", "whether to draw the console over the whole screen or not", //false, null );
-        //s_consoleLock = CreateVariable< bool >( "console.lock", "whether to allow showing/hiding the console", false, null );
-        //s_logging = CreateVariable< bool >( "console.log", "whether to redirect log to the console", true, null );
-    }
-
     private static void HandleTextInput(string input)
     {
         if (input.Length == 0)
             return;
-        options.inputField.text = "";
-        options.inputField.ActivateInputField();
+        inputField.text = "";
+        inputField.ActivateInputField();
         ExecuteCurrentLine(input);
     }
 
@@ -644,11 +615,11 @@ public class SmartConsole : MonoBehaviour
         }
         else if (insertion.Length >= input.Length) // SE - is this really correct?
         {
-            options.inputField.text = insertion;
+            inputField.text = insertion;
         }
         if(insertion[insertion.Length -1] != '.')
-            options.inputField.text = insertion + " ";
-        options.inputField.caretPosition = options.inputField.text.Length;
+            inputField.text = insertion + " ";
+        inputField.caretPosition = inputField.text.Length;
     }
 
     private static bool AutoCompleteTailString(string tailString, string input)
@@ -657,7 +628,7 @@ public class SmartConsole : MonoBehaviour
         {
             if (input.EndsWith(" " + tailString.Substring(0, i)))
             {
-                options.inputField.text = input.Substring(0, input.Length - 1) + tailString.Substring(i - 1);
+                inputField.text = input.Substring(0, input.Length - 1) + tailString.Substring(i - 1);
                 return true;
             }
         }

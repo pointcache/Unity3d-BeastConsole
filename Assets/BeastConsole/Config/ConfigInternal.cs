@@ -8,8 +8,10 @@ using System;
 /// 
 public static partial class CFG
 {
+    public static string configPath = "game.cfg";
+
     //All initialization of variables
-    static CFG()
+    public static void Initialize()
     {
         reg_GFX();
         reg_PLAYER();
@@ -77,8 +79,10 @@ public static partial class CFG
         public Variable(string _group, string _name, string _description, bool _console)
         {
             group = _group;
+            name = _name;
             if (group != "")
                 name = _group + "." + name;
+                
             description = _description;
             if (vars.ContainsKey(name))
             {
@@ -90,7 +94,7 @@ public static partial class CFG
             value = new T();
             baseValue = value;
             if (console)
-                SmartConsole.CreateVariable(this);
+                SmartConsole.RegisterVariable(this);
             
             
             if (!groups.ContainsKey(group))

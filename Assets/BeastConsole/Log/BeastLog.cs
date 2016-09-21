@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-public static class SLog
+public static class BeastLog
 {
     const string idcol = "<color=#1676d0>>id:";
     const string objnamecol = "<color=white>: ";
