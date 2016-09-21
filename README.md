@@ -8,6 +8,7 @@ This project is possible because of the effort of amazing people at Cranium Soft
 this project is based of SmartConsole https://github.com/CraniumSoftware/SmartConsole
 And has all the approvals to use it and build up on top of it.
 
+
 BeastConsole is evolution (hopefully) of SmartConsole,
 it is optimized to work with newest unity UI system, it introcudes new concepts and has more flexibility.
 
@@ -42,4 +43,41 @@ Usage :
   8. when correct name is filled, add a value after a space to insert a value "gfx.vsync = false"
   9. press arrow up to go through previous commands
   10. press ctrl + backspace to erase the line
+
+#Config
+
+Currently config is a static class you can modify adding your own global variables that look like this
+``` csharp
+public static Variable<int> targetFramerate;
+```
+
+once declared scroll down to the methods where we actually construct the variables
+
+``` csharp
+targetFramerate = new Variable<int>(GraphicsGroup, "targetfps", "set max fps for game",  true);
+```
+This will create a wrapper object - dynamic generic variable to which you can bind methods, allowing you to have very flexible interactions with your game global variables.
+
+Variable<T>( group ("gfx." for example) , name , description, is this variable accessible through console? )
+
+``` csharp
+targetFramerate.SetSilent(Application.targetFrameRate);
+```
+We initialize the variable, we use SetSilent:
+ there are 2 ways to set a variable
+ * Set(value) -> will set its value AND raise OnChanged event, notifying all subscribers
+ * SetSilent -> will not raise an event
+
+``` csharp
+targetFramerate.OnChanged += SetTargetFramerate;
+
+static void SetTargetFramerate(int val)
+{ Application.targetFrameRate = val; }
+```
+We subscribe method that sets the framerate in unity to that variable, now every time its Set(), the method processes it.
+Or use lambdas 
+``` csharp 
+CFG.vsync.OnChanged += x => QualitySettings.vSyncCount = x == true ? 1 : 0;
+CFG.fov.OnChanged += x => Camera.main.fieldOfView = x;
+```
 
