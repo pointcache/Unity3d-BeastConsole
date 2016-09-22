@@ -23,6 +23,10 @@ There a lot of very useful features and ways to use it that i will expand in thi
 * DOTween for tweening
 * SmartConsole (embedded) 
 
+#TODO:
+* Modular configs, hook your config file/class instead of directly writing into BeastConsole classes
+* External config file support 
+* Console autocompletion dropdown as you type
 
 #Console
 * 80% of it is created by folks at CraniumSoftware
