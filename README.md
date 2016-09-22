@@ -1,7 +1,7 @@
 ![Tested on Unity 5.4.0f3](https://img.shields.io/badge/Tested%20on%20unity-5.4.0f3-blue.svg?style=flat-square)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 ![License MIT](https://img.shields.io/badge/license-MIT-green.svg)
 
-#BeastConsole
+![logo](http://i.imgur.com/YJqW3LG.png)
 ![screen](http://i.imgur.com/Djw2FPc.png)
 
 This project is possible because of the effort of amazing people at Cranium Software
@@ -27,6 +27,9 @@ There a lot of very useful features and ways to use it that i will expand in thi
 * Modular configs, hook your config file/class instead of directly writing into BeastConsole classes
 * External config file support 
 * Console autocompletion dropdown as you type
+* Remove DoTween dependency
+* Complete Pong game example
+
 
 #Console
 * 80% of it is created by folks at CraniumSoftware
@@ -37,7 +40,7 @@ There a lot of very useful features and ways to use it that i will expand in thi
 * relays your own messages (BeastLog) as well as unity ones
 
 Usage :
-  1. Make sure the scene has unity EventManager
+  1. Make sure the scene has unity EventSystem
   2. Create new object "BeastConsole" add a BeastConsole script to it, set its parameters
   3. Make sure BeastConsole is set very high in Script Execution as it initializes config and that should happen before all config usage happens
   4. Press play, press the button you specified for console.
