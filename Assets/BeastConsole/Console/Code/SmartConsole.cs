@@ -78,7 +78,7 @@ public class SmartConsole : MonoBehaviour
         public KeyCode ConsoleKey;
         public float tweenTime = 0.4f;
         public int maxConsoleLines = 120;
-         
+
     }
 
     public static GameObject entryTemplate;
@@ -96,7 +96,7 @@ public class SmartConsole : MonoBehaviour
     /// <summary>
     /// A class representing a console variable
     /// </summary>
-    public class Variable<T> : Command 
+    public class Variable<T> : Command
     {
         rVar<T> configVar;
 
@@ -168,7 +168,7 @@ public class SmartConsole : MonoBehaviour
 
         consoleRoot.anchorMin = new Vector2(0f, 0.65f);
         consoleRoot.anchorMax = new Vector2(1f, 1f);
-        
+
     }
     bool consoleShown;
     bool inputTargeted;
@@ -198,7 +198,7 @@ public class SmartConsole : MonoBehaviour
 
 
                 consoleShown = true;
-                
+
             }
             else
             {
@@ -209,7 +209,7 @@ public class SmartConsole : MonoBehaviour
                 consoleRoot.DOAnchorPos(new Vector2(0, -consoleRoot.rect.y * 2), options.tweenTime);
                 scrollBar.value = 0;
                 consoleShown = false;
-                
+
             }
 
 
@@ -389,12 +389,12 @@ public class SmartConsole : MonoBehaviour
         RegisterCommand(name, "", "(no description)", callback);
     }
 
-    public static void RegisterVariable<T>(rVar<T> var, string name, string desc) 
+    public static void RegisterVariable<T>(rVar<T> var, string name, string desc)
     {
         if (s_variableDictionary.ContainsKey(name))
         {
             Debug.LogError("Tried to add already existing console variable!");
-            return ;
+            return;
         }
 
         Variable<T> returnValue = new Variable<T>(var, name, desc);
@@ -548,7 +548,7 @@ public class SmartConsole : MonoBehaviour
                 s_currentEXECUTIONhistoryIndex--;
             }
         }
-        if(Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Backspace))
+        if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Backspace))
         {
             delete_back_to_dot();
         }
@@ -625,7 +625,7 @@ public class SmartConsole : MonoBehaviour
         {
             inputField.text = insertion;
         }
-        if(insertion[insertion.Length -1] != '.')
+        if (insertion[insertion.Length - 1] != '.')
             inputField.text = insertion + " ";
         inputField.caretPosition = inputField.text.Length;
     }
@@ -644,7 +644,8 @@ public class SmartConsole : MonoBehaviour
         return false;
     }
 
-    public enum myLogType {
+    public enum myLogType
+    {
         error,
         warning,
         confirmation,
@@ -670,21 +671,21 @@ public class SmartConsole : MonoBehaviour
             case myLogType.warning:
                 {
                     prefix = warningPrefix;
-                    
+
                     break;
                 }
 
             case myLogType.error:
                 {
                     prefix = errorPrefix;
-                    
+
                     break;
                 }
 
             case myLogType.log:
                 {
                     prefix = otherPrefix;
-                   
+
                     break;
                 }
 
@@ -699,38 +700,44 @@ public class SmartConsole : MonoBehaviour
 
     private static void LogHandler(string message, string stack, LogType type)
     {
-        string assertPrefix = "<color=white>[Assert]:";
-        string errorPrefix = "<color=red>[ERROR]: ";
-        string exceptPrefix = "<color=red>[EXCEPT]: ";
-        string warningPrefix = "<color=orange>[WARNING]:";
-        string otherPrefix = "<color=white>";
+        //string assertPrefix = "<color=white>[Assert]:";
+        //string errorPrefix = "<color=red>[ERROR]: ";
+        //string exceptPrefix = "<color=red>[EXCEPT]: ";
+        //string warningPrefix = "<color=orange>[WARNING]:";
+        //string otherPrefix = "<color=white>";
 
-        string prefix = otherPrefix;
+        //string prefix = otherPrefix;
         switch (type)
         {
             case LogType.Assert:
                 {
-                    prefix = assertPrefix;
+                    Log(message, myLogType.warning);
                     break;
                 }
 
             case LogType.Warning:
                 {
-                    prefix = warningPrefix;
+                    Log(message, myLogType.warning);
                     s_lastWarningCallStack = stack;
                     break;
                 }
 
             case LogType.Error:
                 {
-                    prefix = errorPrefix;
+                    Log(message, myLogType.error);
                     s_lastErrorCallStack = stack;
                     break;
                 }
 
             case LogType.Exception:
                 {
-                    prefix = exceptPrefix;
+                    Log(message, myLogType.error);
+                    s_lastExceptionCallStack = stack;
+                    break;
+                }
+            case LogType.Log:
+                 {
+                    Log(message, myLogType.log);
                     s_lastExceptionCallStack = stack;
                     break;
                 }
@@ -741,7 +748,7 @@ public class SmartConsole : MonoBehaviour
                 }
         }
 
-        WriteLine(prefix + message + "</color>");
+        //WriteLine(prefix + message + "</color>");
 
         //switch (type)
         //{
