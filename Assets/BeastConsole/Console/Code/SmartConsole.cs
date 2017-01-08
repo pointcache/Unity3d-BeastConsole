@@ -96,25 +96,25 @@ public class SmartConsole : MonoBehaviour
     /// <summary>
     /// A class representing a console variable
     /// </summary>
-    public class Variable<T> : Command where T : new()
+    public class Variable<T> : Command 
     {
-        CFG.Variable<T> configVar;
+        rVar<T> configVar;
 
-        public Variable(CFG.Variable<T> var)
+        public Variable(rVar<T> var, string name, string desc)
         {
             configVar = var;
-            m_name = var.name;
-            m_help = var.description;
+            m_name = name;
+            m_help = desc;
             m_callback = CommandFunction;
         }
         public void Set(T val) // SE: I don't seem to know enough C# to provide a user friendly assignment operator solution
         {
-            configVar.Set(val);
+            configVar.Value = val;
         }
 
         public static implicit operator T(Variable<T> var)
         {
-            return var.configVar;
+            return var.configVar.Value;
         }
 
         private static void CommandFunction(string parameters)
@@ -130,7 +130,7 @@ public class SmartConsole : MonoBehaviour
                     conjunction = " has been set to ";
                 }
 
-                WriteLine(variable.configVar.name + conjunction + variable.configVar.value);
+                WriteLine(variable.m_name + conjunction + variable.configVar.Value);
             }
         }
 
@@ -198,7 +198,7 @@ public class SmartConsole : MonoBehaviour
 
 
                 consoleShown = true;
-                CFG.consoleOpened.Set(true);
+                
             }
             else
             {
@@ -209,7 +209,7 @@ public class SmartConsole : MonoBehaviour
                 consoleRoot.DOAnchorPos(new Vector2(0, -consoleRoot.rect.y * 2), options.tweenTime);
                 scrollBar.value = 0;
                 consoleShown = false;
-                CFG.consoleOpened.Set(false);
+                
             }
 
 
@@ -389,19 +389,27 @@ public class SmartConsole : MonoBehaviour
         RegisterCommand(name, "", "(no description)", callback);
     }
 
-    public static void RegisterVariable<T>(CFG.Variable<T> var) where T : new()
+    public static void RegisterVariable<T>(rVar<T> var, string name, string desc) 
     {
-        if (s_variableDictionary.ContainsKey(var.name))
+        if (s_variableDictionary.ContainsKey(name))
         {
             Debug.LogError("Tried to add already existing console variable!");
             return ;
         }
 
-        Variable<T> returnValue = new Variable<T>(var);
-        s_variableDictionary.Add(var.name, returnValue);
-        s_masterDictionary.Add(var.name, returnValue);
+        Variable<T> returnValue = new Variable<T>(var, name, desc);
+        s_variableDictionary.Add(name, returnValue);
+        s_masterDictionary.Add(name, returnValue);
     }
 
+    /// <summary>
+    /// Destroy a console variable (so its name can be reused)
+    /// </summary>
+    public static void UnregisterVariable(string name)
+    {
+        s_variableDictionary.Remove(name);
+        s_masterDictionary.Remove(name);
+    }
 
     /// <summary>
     /// Destroy a console variable (so its name can be reused)
@@ -691,11 +699,6 @@ public class SmartConsole : MonoBehaviour
 
     private static void LogHandler(string message, string stack, LogType type)
     {
-        //if( !s_logging )
-        //{
-        //	return;
-        //}
-
         string assertPrefix = "<color=white>[Assert]:";
         string errorPrefix = "<color=red>[ERROR]: ";
         string exceptPrefix = "<color=red>[EXCEPT]: ";

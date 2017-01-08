@@ -5,11 +5,8 @@ using System.Collections.Generic;
 
 public class ExampleLog : MonoBehaviour {
 
-    public bool BeastLogAlsoShowsInUnityConsole;
 	void Start()
     {
-        CFG.output_unity_log.Set(BeastLogAlsoShowsInUnityConsole);
-
         BeastLog.error("You've screwed up!");
         BeastLog.print("some notification");
         BeastLog.confirm("thing is working!");
