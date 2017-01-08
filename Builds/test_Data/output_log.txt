@@ -17,22 +17,22 @@ Platform assembly: D:\Work\Unity3d-BeastConsole\Builds\test_Data\Managed\UnityEn
 Loading D:\Work\Unity3d-BeastConsole\Builds\test_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
 Platform assembly: D:\Work\Unity3d-BeastConsole\Builds\test_Data\Managed\FullSerializer - NoUnity.dll (this message is harmless)
 Loading D:\Work\Unity3d-BeastConsole\Builds\test_Data\Managed\FullSerializer - NoUnity.dll into Unity Child Domain
-Platform assembly: D:\Work\Unity3d-BeastConsole\Builds\test_Data\Managed\DOTween.dll (this message is harmless)
-Loading D:\Work\Unity3d-BeastConsole\Builds\test_Data\Managed\DOTween.dll into Unity Child Domain
-Platform assembly: D:\Work\Unity3d-BeastConsole\Builds\test_Data\Managed\DOTween43.dll (this message is harmless)
-Loading D:\Work\Unity3d-BeastConsole\Builds\test_Data\Managed\DOTween43.dll into Unity Child Domain
-Platform assembly: D:\Work\Unity3d-BeastConsole\Builds\test_Data\Managed\DOTween46.dll (this message is harmless)
-Loading D:\Work\Unity3d-BeastConsole\Builds\test_Data\Managed\DOTween46.dll into Unity Child Domain
-Platform assembly: D:\Work\Unity3d-BeastConsole\Builds\test_Data\Managed\DOTween50.dll (this message is harmless)
-Loading D:\Work\Unity3d-BeastConsole\Builds\test_Data\Managed\DOTween50.dll into Unity Child Domain
-- Completed reload, in  0.039 seconds
+- Completed reload, in  0.040 seconds
 Platform assembly: D:\Work\Unity3d-BeastConsole\Builds\test_Data\Managed\System.Core.dll (this message is harmless)
 Platform assembly: D:\Work\Unity3d-BeastConsole\Builds\test_Data\Managed\System.dll (this message is harmless)
 desktop: 1920x1200 59Hz; virtual: 1920x1200 at 0,0
 <RI> Initializing input.
 <RI> Input initialized.
 <RI> Initialized touch support.
-UnloadTime: 0.571136 ms
+The referenced script on this Behaviour (Game Object 'Example') is missing!
+ 
+(Filename:  Line: 1656)
+
+The referenced script on this Behaviour (Game Object 'Example') is missing!
+ 
+(Filename:  Line: 1656)
+
+UnloadTime: 0.732416 ms
 You've screwed up!
  
 (Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
@@ -49,10 +49,10 @@ you better not!
  
 (Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
 
-We just created <color=#1676d0>>id:1308290176</color>
+We just created <color=#1676d0>>id:-241076736</color>
  
 (Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
 
 Setting up 2 worker threads for Enlighten.
-  Thread -> id: 7f4c -> priority: 1 
-  Thread -> id: 7df8 -> priority: 1 
+  Thread -> id: 4444 -> priority: 1 
+  Thread -> id: 6a54 -> priority: 1 

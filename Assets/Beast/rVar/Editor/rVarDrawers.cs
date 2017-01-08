@@ -1,11 +1,14 @@
-﻿using System;
-using System.Reflection;
-using UnityEngine;
-using System.Text.RegularExpressions;
-using System.Collections;
-using System.Linq;
+﻿namespace rvar
+{
+
+    using System;
+    using System.Reflection;
+    using UnityEngine;
+    using System.Text.RegularExpressions;
+    using System.Collections;
+    using System.Linq;
 #if UNITY_EDITOR
-using UnityEditor;
+    using UnityEditor;
 #endif
     [System.AttributeUsage(System.AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
     public class InspectorDisplayAttribute : PropertyAttribute
@@ -246,59 +249,60 @@ using UnityEditor;
         }
     }
 #endif
-/*using UnityEditor;
-using UnityEngine;
-using System;
-using System.Reflection;
-using System.Collections.Generic;
-using System.Linq;
-[CustomEditor(typeof(ComponentBase), true)]
-[CanEditMultipleObjects]
-public class MyPlayerEditor : Editor
-{
-    ComponentData data;
-    FieldInfo dataField;
-    Type dataType;
-    FieldInfo[] fields;
-    List<FieldInfo> rvars;
-    private void OnEnable()
+    /*using UnityEditor;
+    using UnityEngine;
+    using System;
+    using System.Reflection;
+    using System.Collections.Generic;
+    using System.Linq;
+    [CustomEditor(typeof(ComponentBase), true)]
+    [CanEditMultipleObjects]
+    public class MyPlayerEditor : Editor
     {
-        //get data
-        //get all rvars
-        dataField = target.GetType().GetField("data");
-        data = dataField.GetValue(target) as ComponentData;
-        dataType = dataField.FieldType;
-        fields = dataType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-        rvars = fields.Where(x => x.FieldType.BaseType == typeof(rVar)).ToList();
-    }
-    public override void OnInspectorGUI()
-    {
-        GUILayout.Label("asdasdasd");
-        // Update the serializedProperty - always do this in the beginning of OnInspectorGUI.
-        serializedObject.Update();
-        base.OnInspectorGUI();
-        GUI.color = Color.green;
-        foreach (var r in rvars)
+        ComponentData data;
+        FieldInfo dataField;
+        Type dataType;
+        FieldInfo[] fields;
+        List<FieldInfo> rvars;
+        private void OnEnable()
         {
-            var prop =  r.FieldType.GetProperty("value");
-            var field = r.FieldType.GetField("_value",BindingFlags.NonPublic | BindingFlags.Instance);
-            var rvar =  r.GetValue(data);
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(r.Name);
-            Type valType = prop.PropertyType;
-            if (valType == typeof(float))
+            //get data
+            //get all rvars
+            dataField = target.GetType().GetField("data");
+            data = dataField.GetValue(target) as ComponentData;
+            dataType = dataField.FieldType;
+            fields = dataType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            rvars = fields.Where(x => x.FieldType.BaseType == typeof(rVar)).ToList();
+        }
+        public override void OnInspectorGUI()
+        {
+            GUILayout.Label("asdasdasd");
+            // Update the serializedProperty - always do this in the beginning of OnInspectorGUI.
+            serializedObject.Update();
+            base.OnInspectorGUI();
+            GUI.color = Color.green;
+            foreach (var r in rvars)
             {
-                float val = EditorGUILayout.FloatField((float)field.GetValue(rvar));
-                prop.SetValue(rvar, val, null);
-                field.SetValue(rvar, val);
+                var prop =  r.FieldType.GetProperty("value");
+                var field = r.FieldType.GetField("_value",BindingFlags.NonPublic | BindingFlags.Instance);
+                var rvar =  r.GetValue(data);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(r.Name);
+                Type valType = prop.PropertyType;
+                if (valType == typeof(float))
+                {
+                    float val = EditorGUILayout.FloatField((float)field.GetValue(rvar));
+                    prop.SetValue(rvar, val, null);
+                    field.SetValue(rvar, val);
+                }
+                else
+                if (valType == typeof(int))
+                {
+                    EditorGUILayout.IntField((int)prop.GetValue(rvar, null));
+                }
+                GUILayout.EndHorizontal();
             }
-            else
-            if (valType == typeof(int))
-            {
-                EditorGUILayout.IntField((int)prop.GetValue(rvar, null));
-            }
-            GUILayout.EndHorizontal();
         }
     }
+    */
 }
-*/
