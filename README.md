@@ -50,7 +50,7 @@ rVar is built after UniRx, meaning it's battletested and is worth using as a bac
 
 #Log
 
-This class is fairly simple it allows you to relay messages to beast console avoiding unity debug logs, it also guarantees that you will see console messages even in release build, because that is what you most of the time want.
+This class is fairly simple it allows you to relay messages to beast console avoiding unity debug logs, it also guarantees that you will see console messages even in release build, because that is what you want most of the time .
 
 Check example scene and example script for usage, or just study the class.
 
