@@ -66,16 +66,20 @@ Adding variables to the console:
  3. override OnEnable with base.OnEnable() in it, so we can actually receive unity messages (thanks unity)
  4. add reactive variable of chosen type
 
-```
+```csharp
+
 public r_float Size = new r_float(1f);
+
 ```
 
 5. add attribute
 
-```
+```csharp
+
 [ConfigVar("game.cubesize", "size of cube")]
     public r_float Size = new r_float(1f);
-    ```
+
+```
     
 6. Done.
 
