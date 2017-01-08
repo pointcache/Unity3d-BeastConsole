@@ -18,6 +18,7 @@ Works through rective variables, everything is serialized.
 Out of the box serialization of all the configs.
 In short - super easy, reliable, and looks good.
 
+##**WATCH VIDEO WALKTHROUGH**
 [![IMAGE ALT TEXT](http://img.youtube.com/vi/CzwG-N62g-g/0.jpg)](http://www.youtube.com/watch?v=CzwG-N62g-g "Walkthrough")
 
 BeastConsole is a suite of components:
