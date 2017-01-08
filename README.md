@@ -54,6 +54,30 @@ This class is fairly simple it allows you to relay messages to beast console avo
 
 Check example scene and example script for usage, or just study the class.
 
+#Usage
+
+setup:
+ * drop EventSystem in scene, add BeastConsole to game object, launch - done.
+ 
+Adding variables to the console:
+ * Config class acts as a collector for console variables
+ 1. Create a config class (e.g. GraphicsConfig, PhysicsConfig, GameConfig...) 
+ 2. Inherit from `ConfigBase` 
+ 3. override OnEnable with base.OnEnable() in it, so we can actually receive unity messages (thanks unity)
+ 4. add reactive variable of chosen type
+```
+public r_float Size = new r_float(1f);
+```
+5. add attribute
+```
+[ConfigVar("game.cubesize", "size of cube")]
+    public r_float Size = new r_float(1f);
+    ```
+6. Done.
+
+Adding commands to the console
+
+
 #TODO:
  * Console autocompletion dropdown as you type
  * Complete game example
