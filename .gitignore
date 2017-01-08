@@ -4,12 +4,12 @@
 [Tt]emp/
 [Oo]bj/
 [Bb]uild
-[Ll]ibrary/
+/[Ll]ibrary/
 sysinfo.txt
  
 # ===================================== #
 # Visual Studio / MonoDevelop generated #
-# ===================================== # 
+# ===================================== #
 [Ee]xported[Oo]bj/
 *.userprefs
 *.csproj
@@ -40,5 +40,3 @@ ehthumbs.db
 
 
 
-/.vscode
-/Assets/Plugins/Editor/VSCode.cs
