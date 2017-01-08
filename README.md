@@ -12,6 +12,13 @@ And has all the approvals to use it and build up on top of it.
 BeastConsole is evolution (hopefully) of SmartConsole,
 it is optimized to work with newest unity UI system, it introcudes new concepts and has more flexibility.
 
+Why use this console:
+Easy to hook up.
+Works through rective variables, everything is serialized.
+Out of the box serialization of all the configs.
+In short - super easy, reliable, and looks good.
+
+
 BeastConsole is a suite of components:
   * Console backend- a backend allowing command registration and variables, assignment
   * Console ui - prefabs implementing console display
