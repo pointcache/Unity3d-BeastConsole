@@ -1,4 +1,5 @@
-﻿
+﻿#define BEAST_CONSOLE
+
 namespace BeastConsole
 {
     using UnityEngine;

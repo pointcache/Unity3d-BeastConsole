@@ -9,7 +9,7 @@ public class CubeController : MonoBehaviour {
 
     private void OnEnable()
     {
-        GameConfig.cfg.Size.OnChanged += SetSize;
+        GameConfig.cfg.Size.OnChanged += SetSize;   
     }
 
     void SetSize(float val)
