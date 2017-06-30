@@ -1,6 +1,4 @@
-﻿#define BEAST_CONSOLE
-
-namespace BeastConsole
+﻿namespace BeastConsole
 {
     using UnityEngine;
     using System;
@@ -27,9 +25,8 @@ namespace BeastConsole
         public ConsoleGui.Options consoleOptions;
 
         private GameObject consoleRoot;
-
         private ConsoleGui gui;
-        private Backend backend;
+        private ConsoleBackend backend;
 
         private void Awake()
         {
@@ -39,16 +36,13 @@ namespace BeastConsole
                 Debug.LogError("UnityEvent System not found in scene, manually add it.");
                 Debug.Break();
             }
-            GameObject prefab = Resources.Load<GameObject>("BeastConsole/BeastConsole");
+            GameObject prefab = Resources.Load<GameObject>("BeastConsole/ConsoleGui");
             consoleRoot = GameObject.Instantiate(prefab);
             consoleRoot.transform.SetParent(transform);
-            SmartConsole.options = consoleOptions;
-            SmartConsole.entryTemplate = Resources.Load<GameObject>("BeastConsole/ConsoleEntry");
-            SmartConsole.consoleContent = consoleRoot.transform.FindDeepChild("Content").gameObject;
-            SmartConsole.consoleRoot = consoleRoot.transform.FindDeepChild("Root").GetComponent<RectTransform>();
-            SmartConsole.inputField = consoleRoot.transform.FindDeepChild("InputField").GetComponent<InputField>();
-            SmartConsole.scrollBar = consoleRoot.transform.FindDeepChild("Scrollbar Vertical").GetComponent<Scrollbar>();
-            consoleRoot.AddComponent<SmartConsole>();
+
+            backend = new ConsoleBackend();
+            ConsoleGui gui = consoleRoot.GetComponentInChildren<ConsoleGui>();
+            gui.Initialize(backend);
         }
        
         private void OnDisable()

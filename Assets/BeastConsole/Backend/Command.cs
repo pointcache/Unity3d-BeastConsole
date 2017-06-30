@@ -16,6 +16,6 @@
         public string m_name = null;
         public string m_paramsExample = "";
         public string m_help = "(no description)";
-        public Backend m_backend;
+        public ConsoleBackend m_backend;
     }
 }

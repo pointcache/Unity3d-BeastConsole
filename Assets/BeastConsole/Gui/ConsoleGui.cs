@@ -28,9 +28,9 @@
         [SerializeField]
         private Scrollbar scrollBar;
 
-        private Queue<SmartConsoleEntry> entries = new Queue<SmartConsoleEntry>();
+        private Queue<ConsoleGuiEntry> entries = new Queue<ConsoleGuiEntry>();
         private int s_currentEXECUTIONhistoryIndex = 0;
-        private Backend backend;
+        private ConsoleBackend backend;
         internal bool s_showConsole = false;
 
         private bool consoleShown;
@@ -38,11 +38,12 @@
         private Vector3 posTarget;
         private float lerpTime;
 
-        private void Awake() {
+
+        internal void Initialize(ConsoleBackend backend) {
             if (!gameObject.activeSelf) {
                 return;
             }
-
+            this.backend = backend;
             consoleRoot.anchorMin = new Vector2(0f, 0.65f);
             consoleRoot.anchorMax = new Vector2(1f, 1f);
             posTarget = new Vector2(0, 10000);
@@ -50,7 +51,6 @@
             backend.OnWriteLine += OnWriteLine;
             backend.OnExecutedLine += OnExecutedLine;
             backend.RegisterCommand("clear", "clear the console log", Clear);
-
         }
 
         private float Remap(float value, float from1, float to1, float from2, float to2) {
@@ -117,15 +117,15 @@
         }
 
         public void OnWriteLine(string message) {
-            SmartConsoleEntry entry = null;
+            ConsoleGuiEntry entry = null;
             if (entries.Count > options.maxConsoleLines) {
-                entry = entries.Dequeue().GetComponent<SmartConsoleEntry>();
+                entry = entries.Dequeue().GetComponent<ConsoleGuiEntry>();
                 entries.Enqueue(entry);
                 //OffsetAllEntriesOnce();
                 entry.transform.SetAsLastSibling();
             }
             else {
-                entry = Instantiate(entryTemplate).GetComponent<SmartConsoleEntry>();
+                entry = Instantiate(entryTemplate).GetComponent<ConsoleGuiEntry>();
                 entries.Enqueue(entry);
                 entry.transform.SetParent(consoleContent.transform, true);
                 entry.transform.SetAsLastSibling();

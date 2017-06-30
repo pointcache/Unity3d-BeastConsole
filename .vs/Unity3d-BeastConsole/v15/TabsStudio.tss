@@ -5,12 +5,6 @@
       <string>D:\Work\Unity3d-BeastConsole\Assets\BeastConsole\Gui\ConsoleGui.cs</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>d:\work\unity3d-beastconsole\assets\beast\beastconsole.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>d:\work\unity3d-beastconsole\assets\beast\console\code\smartconsoleentry.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
       <string>D:\Work\Unity3d-BeastConsole\Assets\BeastConsole\Backend\AutocompleteDictionary.cs</string>
     </ArrayOfString>
     <ArrayOfString>
@@ -19,10 +13,11 @@
     <ArrayOfString>
       <string>d:\work\unity3d-beastconsole\assets\beastconsole\backend\variable.cs</string>
     </ArrayOfString>
-  </ArrayOfArrayOfString>
-  <ArrayOfArrayOfString>
     <ArrayOfString>
-      <string>D:\Work\Unity3d-BeastConsole\Assets\Beast\Console\Code\Backend.cs</string>
+      <string>D:\Work\Unity3d-BeastConsole\Assets\BeastConsole\Gui\ConsoleGuiEntry.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\Work\Unity3d-BeastConsole\Assets\BeastConsole\Backend\ConsoleBackend.cs</string>
     </ArrayOfString>
   </ArrayOfArrayOfString>
 </ArrayOfArrayOfArrayOfString>

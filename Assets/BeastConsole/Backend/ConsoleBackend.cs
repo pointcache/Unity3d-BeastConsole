@@ -171,7 +171,7 @@ namespace BeastConsole.Backend {
             s_variableDictionary.Remove(variable.m_name);
             s_masterDictionary.Remove(variable.m_name);
         }
-        // --- commands
+
         private void Help(string parameters) {
             // try and lay it out nicely...
             const int nameLength = 25;
@@ -193,6 +193,7 @@ namespace BeastConsole.Backend {
                 WriteLine(outputString + command.m_help);
             }
         }
+
         private void Echo(string parameters) {
             string outputMessage = "";
             string[] split = CComParameterSplit(parameters);
@@ -214,9 +215,11 @@ namespace BeastConsole.Backend {
         //  private static void LastWarningCallStack(string parameters) {
         //      DumpCallStack(s_lastWarningCallStack);
         //  }
+
         private void Quit(string parameters) {
             Application.Quit();
         }
+
         private void ListCvars(string parameters) {
             // try and lay it out nicely...
             const int nameLength = 50;
@@ -329,10 +332,6 @@ namespace BeastConsole.Backend {
             return split;
         }
 
-
-
-
-
         internal void DumpCallStack(string stackString) {
             string[] lines = stackString.Split(new char[] { '\r', '\n' });
             if (lines.Length == 0) {
@@ -348,7 +347,5 @@ namespace BeastConsole.Backend {
                 WriteLine((i + 1).ToString() + ((i < 9) ? "  " : " ") + lines[i]);
             }
         }
-
-
     }
 }
