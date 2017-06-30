@@ -8,30 +8,30 @@ namespace BeastConsole
     using UnityEngine.UI;
     using UnityEngine.EventSystems;
     using System.Collections;
+    using BeastConsole.GUI;
+    using BeastConsole.Backend;
 
-    public class BeastConsole : MonoBehaviour
+    public class Console : MonoBehaviour
     {
-        string cfgpath { get { return Application.dataPath + "/" + configOptions.config_path; } }
-
-
-        #region SINGLETON
-        private static BeastConsole _instance;
-        public static BeastConsole instance
+        private static Console _instance;
+        public static Console instance
         {
             get
             {
-                if (!_instance) _instance = GameObject.FindObjectOfType<BeastConsole>();
+                if (!_instance) _instance = GameObject.FindObjectOfType<Console>();
                 return _instance;
             }
         }
-        #endregion
 
         [Header("Console")]
-        public SmartConsole.Options consoleOptions;
-        [Header("Config")]
-        public ConfigOptions configOptions;
-        GameObject consoleRoot;
-        void OnEnable()
+        public ConsoleGui.Options consoleOptions;
+
+        private GameObject consoleRoot;
+
+        private ConsoleGui gui;
+        private Backend backend;
+
+        private void Awake()
         {
             var evsys = GameObject.FindObjectOfType<EventSystem>();
             if (!evsys)
@@ -50,28 +50,13 @@ namespace BeastConsole
             SmartConsole.scrollBar = consoleRoot.transform.FindDeepChild("Scrollbar Vertical").GetComponent<Scrollbar>();
             consoleRoot.AddComponent<SmartConsole>();
         }
-
+       
         private void OnDisable()
         {
-            SmartConsole.Destroy();
             Destroy(consoleRoot.gameObject);
         }
 
-        [Serializable]
-        public class ConfigOptions
-        {
-            public string config_path = "game.cfg";
-        }
 
-        public void SaveConfigs()
-        {
-            ConfigSystem.Save(cfgpath);
-        }
-
-        public void LoadConfigs()
-        {
-            ConfigSystem.Load(cfgpath);
-        }
     }
     public static class TransformDeepChildExtension
     {
