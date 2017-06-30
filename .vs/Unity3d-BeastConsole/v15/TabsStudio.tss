@@ -2,7 +2,7 @@
 <ArrayOfArrayOfArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <ArrayOfArrayOfString>
     <ArrayOfString>
-      <string>D:\Work\Unity3d-BeastConsole\Assets\BeastConsole\Gui\ConsoleGui.cs</string>
+      <string>d:\work\unity3d-beastconsole\assets\beastconsole\gui\consolegui.cs</string>
     </ArrayOfString>
     <ArrayOfString>
       <string>D:\Work\Unity3d-BeastConsole\Assets\BeastConsole\Backend\AutocompleteDictionary.cs</string>
@@ -16,6 +16,20 @@
     <ArrayOfString>
       <string>D:\Work\Unity3d-BeastConsole\Assets\BeastConsole\Gui\ConsoleGuiEntry.cs</string>
     </ArrayOfString>
+    <ArrayOfString>
+      <string>d:\work\unity3d-beastconsole\assets\beastconsole\console.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\Work\Unity3d-BeastConsole\Assets\Example.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>Color Themes</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\Work\Unity3d-BeastConsole\Assets\Example\Example.cs</string>
+    </ArrayOfString>
+  </ArrayOfArrayOfString>
+  <ArrayOfArrayOfString>
     <ArrayOfString>
       <string>D:\Work\Unity3d-BeastConsole\Assets\BeastConsole\Backend\ConsoleBackend.cs</string>
     </ArrayOfString>

@@ -5,7 +5,9 @@
 [Oo]bj/
 [Bb]uild
 [Bb]uilds
+/.vs
 /[Ll]ibrary/
+
 sysinfo.txt
  
 # ===================================== #

@@ -1,74 +1,77 @@
-﻿namespace BeastConsole
-{
+﻿namespace BeastConsole {
+
     using UnityEngine;
     using System;
-    using System.Collections.Generic;
-    using UnityEngine.UI;
     using UnityEngine.EventSystems;
-    using System.Collections;
     using BeastConsole.GUI;
     using BeastConsole.Backend;
 
-    public class Console : MonoBehaviour
-    {
+    public class Console : MonoBehaviour {
         private static Console _instance;
         public static Console instance
         {
-            get
-            {
-                if (!_instance) _instance = GameObject.FindObjectOfType<Console>();
+            get {
+                if (!_instance)
+                    _instance = GameObject.FindObjectOfType<Console>();
                 return _instance;
             }
         }
 
-        [Header("Console")]
-        public ConsoleGui.Options consoleOptions;
+        [SerializeField]
+        internal ConsoleGui.Options consoleOptions;
 
-        private GameObject consoleRoot;
-        private ConsoleGui gui;
-        private ConsoleBackend backend;
+        private GameObject m_consoleRoot;
+        private ConsoleGui m_gui;
+        private ConsoleBackend m_backend;
 
-        private void Awake()
-        {
+
+        private void Awake() {
             var evsys = GameObject.FindObjectOfType<EventSystem>();
-            if (!evsys)
-            {
+            if (!evsys) {
                 Debug.LogError("UnityEvent System not found in scene, manually add it.");
                 Debug.Break();
             }
             GameObject prefab = Resources.Load<GameObject>("BeastConsole/ConsoleGui");
-            consoleRoot = GameObject.Instantiate(prefab);
-            consoleRoot.transform.SetParent(transform);
+            m_consoleRoot = GameObject.Instantiate(prefab);
+            m_consoleRoot.transform.SetParent(transform);
 
-            backend = new ConsoleBackend();
-            ConsoleGui gui = consoleRoot.GetComponentInChildren<ConsoleGui>();
-            gui.Initialize(backend);
-        }
-       
-        private void OnDisable()
-        {
-            Destroy(consoleRoot.gameObject);
+            m_backend = new ConsoleBackend();
+            ConsoleGui gui = m_consoleRoot.GetComponentInChildren<ConsoleGui>();
+            gui.Initialize(m_backend, consoleOptions);
         }
 
+        public static void RegisterCommand(string name, string description, object owner, Action<string[]> callback) {
+            instance.m_backend.RegisterCommand(name, description, owner, callback);
+        }
 
-    }
-    public static class TransformDeepChildExtension
-    {
+        public static void UnregisterCommand(string name, object owner) {
+            if (instance != null && instance.m_backend != null)
+                instance.m_backend.RemoveCommandIfExists(name, owner);
+        }
+        public static void RegisterVariable<T>(string name, string description, Action<T> setter, object owner) {
+            instance.m_backend.RegisterVariable<T>(setter, owner, name, description);
+        }
+
+        public static void UnregisterVariable<T>(string name, object owner) {
+            if (instance != null && instance.m_backend != null)
+                instance.m_backend.UnregisterVariable<T>(name, owner);
+        }
+
+        private void OnDisable() {
+            Destroy(m_consoleRoot.gameObject);
+        }
+
         //Breadth-first search
-        public static Transform FindDeepChild(this Transform aParent, string aName)
-        {
+        private Transform FindDeepChild(Transform aParent, string aName) {
             var result = aParent.Find(aName);
             if (result != null)
                 return result;
-            foreach (Transform child in aParent)
-            {
-                result = child.FindDeepChild(aName);
+            foreach (Transform child in aParent) {
+                result = FindDeepChild(child, aName);
                 if (result != null)
                     return result;
             }
             return null;
         }
-
-
     }
 }

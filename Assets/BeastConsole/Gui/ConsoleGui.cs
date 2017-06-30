@@ -7,50 +7,64 @@
     using UnityEngine;
     using UnityEngine.UI;
 
-    public class ConsoleGui : MonoBehaviour {
+    internal class ConsoleGui : MonoBehaviour {
 
-        public Options options;
+        internal Options m_options;
         [System.Serializable]
-        public class Options {
+        internal class Options {
             public KeyCode ConsoleKey = KeyCode.BackQuote;
-            public float tweenTime = 0.4f;
-            public int maxConsoleLines = 120;
+            public float TweenTime = 0.4f;
+            public int MaxConsoleLines = 120;
         }
 
         [SerializeField]
-        private GameObject entryTemplate;
+        private GameObject m_entryTemplate;
         [SerializeField]
-        private GameObject consoleContent;
+        private GameObject m_consoleContent;
         [SerializeField]
-        private RectTransform consoleRoot;
+        private RectTransform m_consoleRoot;
         [SerializeField]
-        private InputField inputField;
+        private InputField m_inputField;
         [SerializeField]
-        private Scrollbar scrollBar;
+        private Scrollbar m_scrollBar;
 
-        private Queue<ConsoleGuiEntry> entries = new Queue<ConsoleGuiEntry>();
-        private int s_currentEXECUTIONhistoryIndex = 0;
-        private ConsoleBackend backend;
         internal bool s_showConsole = false;
 
-        private bool consoleShown;
-        private bool inputTargeted;
-        private Vector3 posTarget;
-        private float lerpTime;
+        private Queue<ConsoleGuiEntry> m_entries = new Queue<ConsoleGuiEntry>();
+        private int m_currentEXECUTIONhistoryIndex = 0;
+        private ConsoleBackend m_backend;
+        private bool m_consoleShown;
+        private bool m_inputTargeted;
+        private Vector3 m_posTarget;
+        private float m_lerpTime;
 
-
-        internal void Initialize(ConsoleBackend backend) {
+        internal void Initialize(ConsoleBackend backend, Options options) {
             if (!gameObject.activeSelf) {
                 return;
             }
-            this.backend = backend;
-            consoleRoot.anchorMin = new Vector2(0f, 0.65f);
-            consoleRoot.anchorMax = new Vector2(1f, 1f);
-            posTarget = new Vector2(0, 10000);
-            inputField.onEndEdit.AddListener(delegate { HandleTextInput(inputField.text); });
+            this.m_backend = backend;
+            this.m_options = options;
+            m_consoleRoot.anchorMin = new Vector2(0f, 0.65f);
+            m_consoleRoot.anchorMax = new Vector2(1f, 1f);
+            m_posTarget = new Vector2(0, 10000);
+            m_inputField.onEndEdit.AddListener(delegate { HandleTextInput(m_inputField.text); });
             backend.OnWriteLine += OnWriteLine;
             backend.OnExecutedLine += OnExecutedLine;
-            backend.RegisterCommand("clear", "clear the console log", Clear);
+            backend.RegisterCommand("clear", "clear the console log",this, Clear);
+        }
+
+                /// <summary>
+        /// Clears out the console log
+        /// </summary>
+        /// <example> 
+        /// <code>
+        /// SmartConsole.Clear();
+        /// </code>
+        /// </example>
+        internal void Clear(string[] parameters) {
+            //we dont want to clear our history, instead we clear the screen
+            //s_outputHistory.Clear();
+            DestroyChildren(m_consoleContent.transform);
         }
 
         private float Remap(float value, float from1, float to1, float from2, float to2) {
@@ -63,52 +77,51 @@
             }
             HandleInput();
             if (s_showConsole) {
-                if (!consoleShown) {
-                    inputField.gameObject.SetActive(true);
-                    if (!inputTargeted) {
-                        inputField.Select();
-                        inputField.ActivateInputField();
-                        inputTargeted = true;
+                if (!m_consoleShown) {
+                    m_inputField.gameObject.SetActive(true);
+                    if (!m_inputTargeted) {
+                        m_inputField.Select();
+                        m_inputField.ActivateInputField();
+                        m_inputTargeted = true;
                     }
-                    posTarget = Vector2.zero;
-                    lerpTime = 0;
-                    consoleShown = true;
+                    m_posTarget = Vector2.zero;
+                    m_lerpTime = 0;
+                    m_consoleShown = true;
                 }
                 else {
-                    inputField.text = "";
-                    inputField.gameObject.SetActive(false);
-                    inputTargeted = false;
-                    posTarget = new Vector2(0, -consoleRoot.rect.y * 2);
-                    lerpTime = 0;
-                    scrollBar.value = 0;
-                    consoleShown = false;
+                    m_inputField.text = "";
+                    m_inputField.gameObject.SetActive(false);
+                    m_inputTargeted = false;
+                    m_posTarget = new Vector2(0, -m_consoleRoot.rect.y * 2);
+                    m_lerpTime = 0;
+                    m_scrollBar.value = 0;
+                    m_consoleShown = false;
                 }
             }
-            if (inputField.isFocused) {
+            if (m_inputField.isFocused) {
                 if (Input.GetKeyDown(KeyCode.Tab)) {
-                    AutoComplete(inputField.text);
+                    AutoComplete(m_inputField.text);
                 }
             }
             s_showConsole = false;
-            if (lerpTime < options.tweenTime - 0.01f) {
-                lerpTime += Time.deltaTime;
-                lerpTime = Mathf.Clamp(lerpTime, 0f, options.tweenTime);
-                consoleRoot.anchoredPosition = Vector3.Lerp(consoleRoot.anchoredPosition, posTarget, Remap(lerpTime, 0f, options.tweenTime, 0f, 1f));
+            if (m_lerpTime < m_options.TweenTime - 0.01f) {
+                m_lerpTime += Time.deltaTime;
+                m_lerpTime = Mathf.Clamp(m_lerpTime, 0f, m_options.TweenTime);
+                m_consoleRoot.anchoredPosition = Vector3.Lerp(m_consoleRoot.anchoredPosition, m_posTarget, Remap(m_lerpTime, 0f, m_options.TweenTime, 0f, 1f));
             }
         }
 
-
         private void HandleInput() {
-            if (Input.GetKeyDown(options.ConsoleKey)) {
+            if (Input.GetKeyDown(m_options.ConsoleKey)) {
                 s_showConsole = true;
-                s_currentEXECUTIONhistoryIndex = backend.s_commandHistory.Count - 1;
+                m_currentEXECUTIONhistoryIndex = m_backend.s_commandHistory.Count - 1;
             }
             if (Input.GetKeyDown(KeyCode.UpArrow)) {
-                if (backend.s_commandHistory.Count > 0) {
-                    s_currentEXECUTIONhistoryIndex = Mathf.Clamp(s_currentEXECUTIONhistoryIndex, 0, backend.s_commandHistory.Count - 1);
-                    inputField.text = backend.s_commandHistory[s_currentEXECUTIONhistoryIndex];
-                    inputField.caretPosition = inputField.text.Length;
-                    s_currentEXECUTIONhistoryIndex--;
+                if (m_backend.s_commandHistory.Count > 0) {
+                    m_currentEXECUTIONhistoryIndex = Mathf.Clamp(m_currentEXECUTIONhistoryIndex, 0, m_backend.s_commandHistory.Count - 1);
+                    m_inputField.text = m_backend.s_commandHistory[m_currentEXECUTIONhistoryIndex];
+                    m_inputField.caretPosition = m_inputField.text.Length;
+                    m_currentEXECUTIONhistoryIndex--;
                 }
             }
             if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Backspace)) {
@@ -116,18 +129,18 @@
             }
         }
 
-        public void OnWriteLine(string message) {
+        internal void OnWriteLine(string message) {
             ConsoleGuiEntry entry = null;
-            if (entries.Count > options.maxConsoleLines) {
-                entry = entries.Dequeue().GetComponent<ConsoleGuiEntry>();
-                entries.Enqueue(entry);
+            if (m_entries.Count > m_options.MaxConsoleLines) {
+                entry = m_entries.Dequeue().GetComponent<ConsoleGuiEntry>();
+                m_entries.Enqueue(entry);
                 //OffsetAllEntriesOnce();
                 entry.transform.SetAsLastSibling();
             }
             else {
-                entry = Instantiate(entryTemplate).GetComponent<ConsoleGuiEntry>();
-                entries.Enqueue(entry);
-                entry.transform.SetParent(consoleContent.transform, true);
+                entry = Instantiate(m_entryTemplate).GetComponent<ConsoleGuiEntry>();
+                m_entries.Enqueue(entry);
+                entry.transform.SetParent(m_consoleContent.transform, true);
                 entry.transform.SetAsLastSibling();
             }
             entry.Clear();
@@ -139,29 +152,29 @@
         private void HandleTextInput(string input) {
             if (input.Length == 0)
                 return;
-            inputField.text = "";
-            inputField.ActivateInputField();
-            backend.ExecuteLine(input);
+            m_inputField.text = "";
+            m_inputField.ActivateInputField();
+            m_backend.ExecuteLine(input);
         }
 
         private void OnExecutedLine(string line) {
-            s_currentEXECUTIONhistoryIndex = backend.s_commandHistory.Count - 1;
+            m_currentEXECUTIONhistoryIndex = m_backend.s_commandHistory.Count - 1;
 
         }
 
-        IEnumerator SetScrollBarToZero() {
+        private IEnumerator SetScrollBarToZero() {
             int i = 0;
             while (i < 2) {
                 i++;
-                scrollBar.value = 0;
+                m_scrollBar.value = 0;
                 yield return null;
             }
-            scrollBar.value = 0;
+            m_scrollBar.value = 0;
             yield break;
         }
 
         private void delete_back_to_dot() {
-            string text = inputField.text;
+            string text = m_inputField.text;
             if (text.Contains(".")) {
                 int index = text.LastIndexOf('.');
                 int length = text.Length - index;
@@ -170,16 +183,16 @@
             else {
                 text = "";
             }
-            inputField.text = text;
+            m_inputField.text = text;
         }
 
         private void AutoComplete(string input) {
-            string[] lookup = backend.CComParameterSplit(input);
+            string[] lookup = m_backend.CComParameterSplit(input);
             if (lookup.Length == 0) {
                 // don't auto complete if we have typed any parameters so far or nothing at all...
                 return;
             }
-            Command nearestMatch = backend.s_masterDictionary.AutoCompleteLookup(lookup[0]);
+            Command nearestMatch = m_backend.s_masterDictionary.AutoCompleteLookup(lookup[0]);
             // only complete to the next dot if there is one present in the completion string which
             // we don't already have in the lookup string
             int dotIndex = 0;
@@ -210,36 +223,21 @@
             }
             else if (insertion.Length >= input.Length) // SE - is this really correct?
             {
-                inputField.text = insertion;
+                m_inputField.text = insertion;
             }
             if (insertion[insertion.Length - 1] != '.')
-                inputField.text = insertion + " ";
-            inputField.caretPosition = inputField.text.Length;
+                m_inputField.text = insertion + " ";
+            m_inputField.caretPosition = m_inputField.text.Length;
         }
-
 
         private bool AutoCompleteTailString(string tailString, string input) {
             for (int i = 1; i < tailString.Length; ++i) {
                 if (input.EndsWith(" " + tailString.Substring(0, i))) {
-                    inputField.text = input.Substring(0, input.Length - 1) + tailString.Substring(i - 1);
+                    m_inputField.text = input.Substring(0, input.Length - 1) + tailString.Substring(i - 1);
                     return true;
                 }
             }
             return false;
-        }
-
-        /// <summary>
-        /// Clears out the console log
-        /// </summary>
-        /// <example> 
-        /// <code>
-        /// SmartConsole.Clear();
-        /// </code>
-        /// </example>
-        public void Clear(string parameters) {
-            //we dont want to clear our history, instead we clear the screen
-            //s_outputHistory.Clear();
-            DestroyChildren(consoleContent.transform);
         }
 
         private void DestroyChildren(Transform tr) {

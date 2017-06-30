@@ -51,14 +51,14 @@ namespace BeastConsole.Backend {
 #endif
 
 
-            RegisterCommand("echo", "echo <string>", "writes <string> to the console log (alias for echo)", Echo);
-            RegisterCommand("help", "displays help information for console command where available", Help);
-            RegisterCommand("list", "lists all currently registered console variables", ListCvars);
-            RegisterCommand("print", "print <string>", "writes <string> to the console log", Echo);
-            RegisterCommand("quit", "quit the game (not sure this works with iOS/Android)", Quit);
-           // RegisterCommand("callstack.warning", "display the call stack for the last warning message", LastWarningCallStack);
-           // RegisterCommand("callstack.error", "display the call stack for the last error message", LastErrorCallStack);
-           // RegisterCommand("callstack.exception", "display the call stack for the last exception message", LastExceptionCallStack);
+            RegisterCommand("echo", "writes <string> to the console log (alias for echo)", this, Echo);
+            RegisterCommand("help", "displays help information for console command where available", this, Help);
+            RegisterCommand("list", "lists all currently registered console variables", this, ListCvars);
+            RegisterCommand("print", "writes <string> to the console log", this, Echo);
+            RegisterCommand("quit", "quit the game (not sure this works with iOS/Android)", this, Quit);
+            // RegisterCommand("callstack.warning", "display the call stack for the last warning message", LastWarningCallStack);
+            // RegisterCommand("callstack.error", "display the call stack for the last error message", LastErrorCallStack);
+            // RegisterCommand("callstack.exception", "display the call stack for the last exception message", LastExceptionCallStack);
 
         }
 
@@ -106,7 +106,7 @@ namespace BeastConsole.Backend {
             if (words.Length > 0) {
                 if (s_masterDictionary.ContainsKey(words[0])) {
                     WriteLine("<b>=> </b><color=lime>" + inputLine + "</color>");
-                    s_masterDictionary[words[0]].m_callback(inputLine);
+                    s_masterDictionary[words[0]].Execute(inputLine);
                 }
                 else {
                     WriteLine("<color=red>Unrecognised command or variable name: " + words[0] + "</color>");
@@ -116,51 +116,65 @@ namespace BeastConsole.Backend {
             }
         }
         // public static void ExecuteFile( string path ) {} //...
-        public void RemoveCommandIfExists(string name) {
-            s_commandDictionary.Remove(name);
-            s_masterDictionary.Remove(name);
+        public void RemoveCommandIfExists(string name, object owner) {
+            Command comm = null;
+            s_commandDictionary.TryGetValue(name, out comm);
+            if (comm != null) {
+                comm.RemoveCommand(owner);
+                if (comm.m_command.GetInvocationList().Length == 0) {
+                    s_commandDictionary.Remove(name);
+                    s_masterDictionary.Remove(name);
+                }
+            }
         }
         /// <summary>
         /// Register a console command with an example of usage and a help description
         /// e.g. SmartConsole.RegisterCommand( "echo", "echo <string>", "writes <string> to the console log", SmartConsole.Echo );
         /// </summary>
-        public void RegisterCommand(string name, string exampleUsage, string helpDescription, Command.ConsoleCommandFunction callback) {
-            Command command = new Command();
-            command.m_name = name;
-            command.m_paramsExample = exampleUsage;
-            command.m_help = helpDescription;
-            command.m_callback = callback;
-            command.m_backend = this;
-            s_commandDictionary.Add(name, command);
-            s_masterDictionary.Add(name, command);
+        public void RegisterCommand(string name, string helpDescription, object owner, Action<string[]> callback) {
+
+            Command comm = null;
+            s_commandDictionary.TryGetValue(name, out comm);
+            if (comm != null) {
+                comm.AddCommand(owner, callback);
+                return;
+            }
+            else {
+                Command command = new Command();
+                command.m_name = name;
+                command.m_help = helpDescription;
+                command.m_backend = this;
+                command.AddCommand(owner, callback);
+                s_commandDictionary.Add(name, command);
+                s_masterDictionary.Add(name, command);
+            }
         }
-        /// <summary>
-        /// Register a console command with a help description
-        /// e.g. SmartConsole.RegisterCommand( "help", "displays help information for console command where available", SmartConsole.Help );
-        /// </summary>
-        public  void RegisterCommand(string name, string helpDescription, Command.ConsoleCommandFunction callback) {
-            RegisterCommand(name, "", helpDescription, callback);
+
+        public void RegisterVariable<T>(Action<T> setter, object owner, string name, string desc) {
+            Command comm = null;
+            s_variableDictionary.TryGetValue(name, out comm);
+            if (comm != null) {
+                var variable = comm as Variable<T>;
+                variable.Add(owner, setter);
+                return;
+            }
+            else {
+                Variable<T> returnValue = new Variable<T>(name, desc, setter, owner, this);
+                s_variableDictionary.Add(name, returnValue);
+                s_masterDictionary.Add(name, returnValue);
+            }
         }
-        /// <summary>
-        /// Register a console command
-        /// e.g. SmartConsole.RegisterCommand( "foo", Foo );
-        /// </summary>
-        public  void RegisterCommand(string name, Command.ConsoleCommandFunction callback) {
-            RegisterCommand(name, "", "(no description)", callback);
-        }
-        // public static void RegisterVariable<T>(rVar<T> var, string name, string desc) {
-        //     if (s_variableDictionary.ContainsKey(name)) {
-        //         Debug.LogError("Tried to add already existing console variable!");
-        //         return;
-        //     }
-        //     Variable<T> returnValue = new Variable<T>(var, name, desc);
-        //     s_variableDictionary.Add(name, returnValue);
-        //     s_masterDictionary.Add(name, returnValue);
-        // }
-        /// <summary>
-        /// Destroy a console variable (so its name can be reused)
-        /// </summary>
-        public void UnregisterVariable(string name) {
+
+        public void UnregisterVariable<T>(string name, object owner) {
+
+            Command comm = null;
+            s_variableDictionary.TryGetValue(name, out comm);
+            if (comm != null) {
+                var variable = comm as Variable<T>;
+                variable.Remove(owner);
+                return;
+            }
+
             s_variableDictionary.Remove(name);
             s_masterDictionary.Remove(name);
         }
@@ -172,7 +186,7 @@ namespace BeastConsole.Backend {
             s_masterDictionary.Remove(variable.m_name);
         }
 
-        private void Help(string parameters) {
+        private void Help(string[] parameters) {
             // try and lay it out nicely...
             const int nameLength = 25;
             const int exampleLength = 35;
@@ -194,11 +208,10 @@ namespace BeastConsole.Backend {
             }
         }
 
-        private void Echo(string parameters) {
+        private void Echo(string[] parameters) {
             string outputMessage = "";
-            string[] split = CComParameterSplit(parameters);
-            for (int i = 1; i < split.Length; ++i) {
-                outputMessage += split[i] + " ";
+            for (int i = 1; i < parameters.Length; ++i) {
+                outputMessage += parameters[i] + " ";
             }
             if (outputMessage.EndsWith(" ")) {
                 outputMessage.Substring(0, outputMessage.Length - 1);
@@ -216,11 +229,11 @@ namespace BeastConsole.Backend {
         //      DumpCallStack(s_lastWarningCallStack);
         //  }
 
-        private void Quit(string parameters) {
+        private void Quit(string[] parameters) {
             Application.Quit();
         }
 
-        private void ListCvars(string parameters) {
+        private void ListCvars(string[] parameters) {
             // try and lay it out nicely...
             const int nameLength = 50;
             foreach (Command variable in s_variableDictionary.Values) {
