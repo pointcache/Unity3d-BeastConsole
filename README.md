@@ -1,7 +1,7 @@
 ![Tested on Unity 5.4.0f3](https://img.shields.io/badge/Tested%20on%20unity-5.4.0f3-blue.svg?style=flat-square)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 ![License MIT](https://img.shields.io/badge/license-MIT-green.svg)
 
-![logo](http://i.imgur.com/YJqW3LG.png)
+![logo](https://kek.gg/i/5Xt-2j.png)
 ![screen](http://i.imgur.com/Djw2FPc.png)
 
 This project is possible because of the effort of amazing people at Cranium Software
