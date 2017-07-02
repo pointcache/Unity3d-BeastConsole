@@ -20,18 +20,37 @@
       <string>d:\work\unity3d-beastconsole\assets\beastconsole\console.cs</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>D:\Work\Unity3d-BeastConsole\Assets\Example.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>Color Themes</string>
-    </ArrayOfString>
-    <ArrayOfString>
       <string>D:\Work\Unity3d-BeastConsole\Assets\Example\Example.cs</string>
     </ArrayOfString>
-  </ArrayOfArrayOfString>
-  <ArrayOfArrayOfString>
     <ArrayOfString>
-      <string>D:\Work\Unity3d-BeastConsole\Assets\BeastConsole\Backend\ConsoleBackend.cs</string>
+      <string>d:\work\unity3d-beastconsole\assets\example\exampleconfig.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\Work\Unity3d-BeastConsole\Assets\Example\MultilineExample.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>d:\work\unity3d-beastconsole\assets\beastconsole\backend\consolebackend.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\Work\Unity3d-BeastConsole\Assets\Example\AutoCompleteExmaple.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\Work\Unity3d-BeastConsole\Assets\BeastConsole\Backend\Trie.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>d:\work\unity3d-beastconsole\assets\beastconsole\backend\trieentry.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\Work\Unity3d-BeastConsole\Assets\Example\Editor\EditorTests.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\Work\Unity3d-BeastConsole\Assets\AutoCompleteGuiEntry.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>C:\Users\alex\AppData\Local\Temp\MetadataAsSource\b94a5f03e4204524b41fbc4e1a070177\8713fe83b4fe4c419c519c3300af9a41\InputField.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\Work\Unity3d-BeastConsole\Assets\HistoryGuiEntry.cs</string>
     </ArrayOfString>
   </ArrayOfArrayOfString>
 </ArrayOfArrayOfArrayOfString>

@@ -29,21 +29,22 @@ namespace BeastConsole.Backend {
         internal Action<string> OnWriteLine = delegate { };
         internal Action<string> OnExecutedLine = delegate { };
 
-        internal GameObject s_textInput = null;
-        internal AutoCompleteDictionary<Command> s_commandDictionary = new AutoCompleteDictionary<Command>();
-        internal AutoCompleteDictionary<Command> s_variableDictionary = new AutoCompleteDictionary<Command>();
-        internal AutoCompleteDictionary<Command> s_masterDictionary = new AutoCompleteDictionary<Command>();
-        internal List<string> s_commandHistory = new List<string>();
-        internal List<string> s_outputHistory = new List<string>();
-        internal string s_lastExceptionCallStack = "(none yet)";
-        internal string s_lastErrorCallStack = "(none yet)";
-        internal string s_lastWarningCallStack = "(none yet)";
+        internal GameObject m_textInput = null;
+        internal AutoCompleteDictionary<Command> m_commandDictionary = new AutoCompleteDictionary<Command>();
+        internal AutoCompleteDictionary<Command> m_variableDictionary = new AutoCompleteDictionary<Command>();
+        internal AutoCompleteDictionary<Command> m_masterDictionary = new AutoCompleteDictionary<Command>();
+        internal Trie<string> m_commandsTrie = new Trie<string>();
+        internal List<string> m_commandHistory = new List<string>();
+        internal List<string> m_outputHistory = new List<string>();
+        internal string m_lastExceptionCallStack = "(none yet)";
+        internal string m_lastErrorCallStack = "(none yet)";
+        internal string m_lastWarningCallStack = "(none yet)";
 
 
         // --- internals
         internal ConsoleBackend() {
             // run this only once...
-            if (s_textInput != null) {
+            if (m_textInput != null) {
                 return;
             }
 #if UNITY_EDITOR
@@ -63,40 +64,20 @@ namespace BeastConsole.Backend {
         }
 
         internal void WriteLine(string line) {
-            string msg = DeNewLine(line);
-            s_outputHistory.Add(msg);
-            OnWriteLine(msg);
+            //string msg = DeNewLine(line);
+            m_outputHistory.Add(line);
+            OnWriteLine(line);
         }
 
         internal string DeNewLine(string message) {
             return message.Replace("\n", " | ");
         }
 
-        /// <summary>
-        /// Write a message to the debug console (only - not the log)
-        /// </summary>
-        /// <param name="message">
-        /// The message to display
-        /// </param>
-        /// <example>
-        /// <code>
-        /// SmartConsole.Print( "Hello world!" );
-        /// </code>
-        /// </example>
+
         public void Print(string message) {
             WriteLine(message);
         }
-        /// <summary>
-        /// Write a message to the debug console (only - not the log)
-        /// </summary>
-        /// <param name="message">
-        /// The message to display
-        /// </param>
-        /// <example>
-        /// <code>
-        /// SmartConsole.WriteLine( "Hello world!" );
-        /// </code>
-        /// </example>
+
 
         /// <summary>
         /// Execute a string as if it were a single line of input to the console
@@ -104,26 +85,26 @@ namespace BeastConsole.Backend {
         public void ExecuteLine(string inputLine) {
             string[] words = CComParameterSplit(inputLine);
             if (words.Length > 0) {
-                if (s_masterDictionary.ContainsKey(words[0])) {
+                if (m_masterDictionary.ContainsKey(words[0])) {
                     WriteLine("<b>=> </b><color=lime>" + inputLine + "</color>");
-                    s_masterDictionary[words[0]].Execute(inputLine);
+                    m_masterDictionary[words[0]].Execute(inputLine);
                 }
                 else {
                     WriteLine("<color=red>Unrecognised command or variable name: " + words[0] + "</color>");
                 }
-                s_commandHistory.Add(inputLine);
+                m_commandHistory.Add(inputLine);
                 OnExecutedLine(inputLine);
             }
         }
         // public static void ExecuteFile( string path ) {} //...
         public void RemoveCommandIfExists(string name, object owner) {
             Command comm = null;
-            s_commandDictionary.TryGetValue(name, out comm);
+            m_commandDictionary.TryGetValue(name, out comm);
             if (comm != null) {
                 comm.RemoveCommand(owner);
                 if (comm.m_command.GetInvocationList().Length == 0) {
-                    s_commandDictionary.Remove(name);
-                    s_masterDictionary.Remove(name);
+                    m_commandDictionary.Remove(name);
+                    m_masterDictionary.Remove(name);
                 }
             }
         }
@@ -134,7 +115,7 @@ namespace BeastConsole.Backend {
         public void RegisterCommand(string name, string helpDescription, object owner, Action<string[]> callback) {
 
             Command comm = null;
-            s_commandDictionary.TryGetValue(name, out comm);
+            m_commandDictionary.TryGetValue(name, out comm);
             if (comm != null) {
                 comm.AddCommand(owner, callback);
                 return;
@@ -145,14 +126,15 @@ namespace BeastConsole.Backend {
                 command.m_help = helpDescription;
                 command.m_backend = this;
                 command.AddCommand(owner, callback);
-                s_commandDictionary.Add(name, command);
-                s_masterDictionary.Add(name, command);
+                m_commandDictionary.Add(name, command);
+                m_masterDictionary.Add(name, command);
+                m_commandsTrie.Add(new TrieEntry<string>(name,name));
             }
         }
 
         public void RegisterVariable<T>(Action<T> setter, object owner, string name, string desc) {
             Command comm = null;
-            s_variableDictionary.TryGetValue(name, out comm);
+            m_variableDictionary.TryGetValue(name, out comm);
             if (comm != null) {
                 var variable = comm as Variable<T>;
                 variable.Add(owner, setter);
@@ -160,37 +142,39 @@ namespace BeastConsole.Backend {
             }
             else {
                 Variable<T> returnValue = new Variable<T>(name, desc, setter, owner, this);
-                s_variableDictionary.Add(name, returnValue);
-                s_masterDictionary.Add(name, returnValue);
+                m_variableDictionary.Add(name, returnValue);
+                m_masterDictionary.Add(name, returnValue);
+                m_commandsTrie.Add(new TrieEntry<string>(name,name));
+
             }
         }
 
         public void UnregisterVariable<T>(string name, object owner) {
 
             Command comm = null;
-            s_variableDictionary.TryGetValue(name, out comm);
+            m_variableDictionary.TryGetValue(name, out comm);
             if (comm != null) {
                 var variable = comm as Variable<T>;
                 variable.Remove(owner);
                 return;
             }
 
-            s_variableDictionary.Remove(name);
-            s_masterDictionary.Remove(name);
+            m_variableDictionary.Remove(name);
+            m_masterDictionary.Remove(name);
         }
         /// <summary>
         /// Destroy a console variable (so its name can be reused)
         /// </summary>
         public void UnregisterVariable<T>(Variable<T> variable) where T : new() {
-            s_variableDictionary.Remove(variable.m_name);
-            s_masterDictionary.Remove(variable.m_name);
+            m_variableDictionary.Remove(variable.m_name);
+            m_masterDictionary.Remove(variable.m_name);
         }
 
         private void Help(string[] parameters) {
             // try and lay it out nicely...
             const int nameLength = 25;
             const int exampleLength = 35;
-            foreach (Command command in s_commandDictionary.Values) {
+            foreach (Command command in m_commandDictionary.Values) {
                 string outputString = command.m_name;
                 for (int i = command.m_name.Length; i < nameLength; ++i) {
                     outputString += " ";
@@ -236,7 +220,7 @@ namespace BeastConsole.Backend {
         private void ListCvars(string[] parameters) {
             // try and lay it out nicely...
             const int nameLength = 50;
-            foreach (Command variable in s_variableDictionary.Values) {
+            foreach (Command variable in m_variableDictionary.Values) {
                 string outputString = variable.m_name;
                 for (int i = variable.m_name.Length; i < nameLength; ++i) {
                     outputString += " ";

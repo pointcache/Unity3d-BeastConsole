@@ -17,23 +17,23 @@ public class ExampleConfig : MonoBehaviour {
 
     private void Awake() {
         //Simple setter
-        Console.RegisterVariable<float>("Volume", "", x => Volume = x, this);
+        Console.RegisterVariable<float>("volume", "", x => Volume = x, this);
 
         //Lambda
-        Console.RegisterVariable<bool>("Vsync", "", x=>
+        Console.RegisterVariable<bool>("vsync", "", x=>
         {
             Vsync = x;
             QualitySettings.vSyncCount = x ? 1 : 0;
         }, this);
 
         //Method
-        Console.RegisterVariable<int>("FrameLimit", "", SetFramerate, this);
+        Console.RegisterVariable<int>("frameLimit", "", SetFramerate, this);
     }
 
     private void OnDestroy() {
-        Console.UnregisterVariable<float>("Volume", this);
-        Console.UnregisterVariable<bool>("Vsync",  this);
-        Console.UnregisterVariable<int>("FrameLimit", this);
+        Console.UnregisterVariable<float>("volume", this);
+        Console.UnregisterVariable<bool>("vsync",  this);
+        Console.UnregisterVariable<int>("frameLimit", this);
         
     }
 

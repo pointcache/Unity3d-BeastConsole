@@ -37,8 +37,8 @@
 
         internal override void Execute(string parameters) {
             string[] split = m_backend.CVarParameterSplit(parameters);
-            if ((split.Length != 0) && m_backend.s_variableDictionary.ContainsKey(split[0])) {
-                Variable<T> variable = m_backend.s_variableDictionary[split[0]] as Variable<T>;
+            if ((split.Length > 1) && m_backend.m_variableDictionary.ContainsKey(split[0])) {
+                Variable<T> variable = m_backend.m_variableDictionary[split[0]] as Variable<T>;
                 string conjunction = " is set to ";
                 if (split.Length == 2) {
                     variable.SetFromString(split[1]);

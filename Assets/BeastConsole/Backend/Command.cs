@@ -23,7 +23,15 @@
         }
 
         internal virtual void Execute(string line) {
-            m_command(line.Split(' '));
+            if (m_command == null) {
+                BeastConsole.Console.WriteLine("Missing target method for command: " + line);
+            }
+            else
+                m_command(line.Split(' '));
+        }
+
+        public override string ToString() {
+            return m_name;
         }
     }
 }

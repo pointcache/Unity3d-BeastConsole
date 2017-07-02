@@ -4,11 +4,12 @@ timeCreated: 1474403944
 licenseType: Free
 TrueTypeFontImporter:
   serializedVersion: 4
-  fontSize: 16
+  fontSize: 20
   forceTextureCase: -2
   characterSpacing: 0
   characterPadding: 1
   includeFontData: 1
+  fontName: Droid Sans Mono
   fontNames:
   - Droid Sans Mono
   fallbackFontReferences: []

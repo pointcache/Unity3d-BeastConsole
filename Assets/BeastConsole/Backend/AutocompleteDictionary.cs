@@ -11,18 +11,21 @@
         {
             m_comparer = this.Comparer as AutoCompleteComparer;
         }
+
         public T LowerBound(string lookupString)
         {
             m_comparer.Reset();
             this.ContainsKey(lookupString);
             return this[m_comparer.LowerBound];
         }
+
         public T UpperBound(string lookupString)
         {
             m_comparer.Reset();
             this.ContainsKey(lookupString);
             return this[m_comparer.UpperBound];
         }
+
         public T AutoCompleteLookup(string lookupString)
         {
             m_comparer.Reset();
@@ -30,6 +33,7 @@
             string key = (m_comparer.UpperBound == null) ? m_comparer.LowerBound : m_comparer.UpperBound;
             return this[key];
         }
+
         private class AutoCompleteComparer : IComparer<string>
         {
             private string m_lowerBound = null;
