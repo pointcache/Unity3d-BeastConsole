@@ -24,7 +24,6 @@
 
         public void OnSelect(BaseEventData eventData) {
             s_selectedCount++;
-
         }
 
         public void OnSubmit(BaseEventData eventData) {

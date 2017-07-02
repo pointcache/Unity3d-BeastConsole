@@ -2,6 +2,7 @@
 
     using System.Collections;
     using System.Collections.Generic;
+    using System.Linq;
     using BeastConsole.Backend;
     using BeastConsole.Backend.Internal;
     using UnityEngine;
@@ -59,7 +60,8 @@
             m_consoleRoot.anchorMin = new Vector2(0f, 0.65f);
             m_consoleRoot.anchorMax = new Vector2(1f, 1f);
             m_posTarget = new Vector2(0, 10000);
-            m_inputField.onValueChanged.AddListener(ShowAutoCompleteSuggestions);
+            m_inputField.onValueChanged.AddListener(DrawAutoCompleteSuggestions);
+            m_inputField.onEndEdit.AddListener(HandleInput);
             m_backend.OnWriteLine += OnWriteLine;
             m_backend.OnExecutedLine += OnExecutedLine;
             m_backend.RegisterCommand("clear", "clear the console log", this, Clear);
@@ -72,7 +74,21 @@
             StartCoroutine(SetScrollBarToZero());
         }
 
-        private void ShowAutoCompleteSuggestions(string str) {
+        private void HandleInput(string text) {
+            if (Input.GetKeyDown(KeyCode.Return)) {
+                if (text.Length == 0)
+                    return;
+                m_inputField.text = "";
+                m_inputField.ActivateInputField();
+                m_backend.ExecuteLine(text);
+            }
+        }
+
+        private void HandleTextInput(string input) {
+
+        }
+
+        private void DrawAutoCompleteSuggestions(string str) {
             if (string.IsNullOrEmpty(str)) {
                 if (m_autocompleteRoot.childCount > 0)
                     Console.DestroyChildren(m_autocompleteRoot);
@@ -81,11 +97,34 @@
 
             Console.DestroyChildren(m_autocompleteRoot);
             var results = m_backend.m_commandsTrie.GetByPrefix(str);
+
             foreach (var item in results) {
                 var go = Instantiate(m_autocompleteEntryTemplate, m_autocompleteRoot, false);
                 go.GetComponentInChildren<AutoCompleteGuiEntry>().Initialize(item.Value, this);
+                var button = go.GetComponent<Button>();
             }
+            int index = 0;
+            if (m_autocompleteRoot.childCount > 1) {
+                foreach (Transform tr in m_autocompleteRoot) {
+                    var button = tr.GetComponent<Button>();
+                    var nav = button.navigation;
+                    if (index == 0) {
+                        nav.selectOnDown = m_autocompleteRoot.GetChild(1).GetComponent<Button>();
+                    }
+                    else
+                        if (index == m_autocompleteRoot.childCount - 1) {
+                        nav.selectOnUp = m_autocompleteRoot.GetChild(m_autocompleteRoot.childCount - 2).GetComponent<Button>();
+                    }
+                    else {
+                        nav.selectOnDown = m_autocompleteRoot.GetChild(index + 1).GetComponent<Button>();
+                        nav.selectOnUp = m_autocompleteRoot.GetChild(index - 1).GetComponent<Button>();
 
+                    }
+
+                    button.navigation = nav;
+                    index++;
+                }
+            }
             //m_autocompleteRoot.position = GetLocalCaretPosition();
         }
 
@@ -165,14 +204,14 @@
                     m_consoleRoot.gameObject.SetActive(false);
             }
 
-            if (HistoryGuiEntry.s_selectedCount == 0) {
+            if (m_historyRoot.gameObject.activeSelf && !HistoryGuiEntry.s_selected) {
                 m_historyRoot.gameObject.SetActive(false);
                 SelectInput();
 
             }
-            if (AutoCompleteGuiEntry.s_selectedCount == 0) {
-                SelectInput();
-            }
+            //if (AutoCompleteGuiEntry.s_selectedCount == 0) {
+            //    SelectInput();
+            //}
         }
 
         private void HandleInput() {
@@ -187,7 +226,8 @@
                 GameObject sel = EventSystem.current.currentSelectedGameObject;
                 if (m_inputField.gameObject == sel) {
                     DrawHistory();
-                    EventSystem.current.SetSelectedGameObject(m_historyRoot.GetChild(m_historyRoot.childCount - 1).gameObject);
+                    if (m_historyRoot.childCount > 0)
+                        EventSystem.current.SetSelectedGameObject(m_historyRoot.GetChild(m_historyRoot.childCount - 1).gameObject);
                 }
                 else {
 
@@ -207,30 +247,32 @@
                 delete_back_to_dot();
             }
 
-            else
-            if (Input.GetKeyDown(KeyCode.Return)) {
-                GameObject sel = EventSystem.current.currentSelectedGameObject;
-                if (m_inputField.gameObject == sel)
-                    HandleTextInput(m_inputField.text);
-                else {
-                    //if (sel) {
-                    //    if (sel.GetComponent<AutoCompleteGuiEntry>()) {
-                    //        m_inputField.text = sel.GetComponentInChildren<Text>().text + " ";
-                    //        SelectInput();
-                    //        m_inputField.ForceLabelUpdate();
-                    //        m_inputField.selectionFocusPosition = 0;
-                    //        m_inputField.caretPosition = m_inputField.text.Length;
-                    //    }
-                    //}
-                }
-            }
+            //else
+            //if (Input.GetKeyDown(KeyCode.Return)) {
+            //    GameObject sel = EventSystem.current.currentSelectedGameObject;
+            //    if (m_inputField.gameObject == sel && m_inputField.isFocused)
+            //        HandleTextInput(m_inputField.text);
+            //    else {
+            //        //if (sel) {
+            //        //    if (sel.GetComponent<AutoCompleteGuiEntry>()) {
+            //        //        m_inputField.text = sel.GetComponentInChildren<Text>().text + " ";
+            //        //        SelectInput();
+            //        //        m_inputField.ForceLabelUpdate();
+            //        //        m_inputField.selectionFocusPosition = 0;
+            //        //        m_inputField.caretPosition = m_inputField.text.Length;
+            //        //    }
+            //        //}
+            //    }
+            //}
 
             else
             if (Input.GetKeyDown(KeyCode.DownArrow)) {
                 GameObject sel = EventSystem.current.currentSelectedGameObject;
                 if (m_inputField.gameObject == sel) {
-
-                    EventSystem.current.SetSelectedGameObject(SelectAutoComplete());
+                    if (m_inputField.text != string.Empty) {
+                        //SelectInput();
+                        EventSystem.current.SetSelectedGameObject(SelectAutoComplete());
+                    }
                 }
             }
 
@@ -288,13 +330,7 @@
             StartCoroutine(SetScrollBarToZero());
         }
 
-        private void HandleTextInput(string input) {
-            if (input.Length == 0)
-                return;
-            m_inputField.text = "";
-            m_inputField.ActivateInputField();
-            m_backend.ExecuteLine(input);
-        }
+
 
         private void OnExecutedLine(string line) {
             m_currentEXECUTIONhistoryIndex = m_backend.m_commandHistory.Count - 1;

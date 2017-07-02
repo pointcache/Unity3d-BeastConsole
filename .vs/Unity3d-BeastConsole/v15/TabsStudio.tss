@@ -44,13 +44,16 @@
       <string>D:\Work\Unity3d-BeastConsole\Assets\Example\Editor\EditorTests.cs</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>D:\Work\Unity3d-BeastConsole\Assets\AutoCompleteGuiEntry.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>C:\Users\alex\AppData\Local\Temp\MetadataAsSource\b94a5f03e4204524b41fbc4e1a070177\8713fe83b4fe4c419c519c3300af9a41\InputField.cs</string>
+      <string>d:\work\unity3d-beastconsole\assets\autocompleteguientry.cs</string>
     </ArrayOfString>
     <ArrayOfString>
       <string>D:\Work\Unity3d-BeastConsole\Assets\HistoryGuiEntry.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>C:\Users\alex\AppData\Local\Temp\MetadataAsSource\4259099f7d164120a56e6a323e0c7471\ba5a3e44f72a4561a4617d6bae46a4c2\BaseEventData.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\Work\Unity3d-BeastConsole\Assets\ConsoleGuiInputField.cs</string>
     </ArrayOfString>
   </ArrayOfArrayOfString>
 </ArrayOfArrayOfArrayOfString>

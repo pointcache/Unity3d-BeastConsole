@@ -13,7 +13,7 @@
 
         private string m_line;
         private ConsoleGui m_gui;
-        internal static int s_selectedCount;
+        internal static HistoryGuiEntry s_selected;
 
         internal void Initialize(string line, ConsoleGui gui) {
             m_gui = gui;
@@ -22,16 +22,20 @@
         }
 
         public void OnDeselect(BaseEventData eventData) {
-            s_selectedCount--;
+            s_selected = null;
         }
 
         public void OnSelect(BaseEventData eventData) {
-            s_selectedCount++;
-            Debug.Log("test");
+            s_selected = this;
         }
 
         public void OnSubmit(BaseEventData eventData) {
-            BeastConsole.Console.ExecuteLine(m_line);
+            if (Input.GetKey(KeyCode.LeftShift)) {
+                BeastConsole.Console.ExecuteLine(m_line);
+            }
+            else {
+                m_gui.SetInputText(m_line);
+            }
             m_gui.SelectInput();
         }
     }
