@@ -1,8 +1,10 @@
 
 ![License MIT](https://img.shields.io/badge/license-MIT-green.svg)
 
-![logo](https://kek.gg/i/5Xt-2j.png)
+![logo](https://kek.gg/i/5MHLFz.png)
 ![screen](https://kek.gg/i/7WYj78.png)
+![screen](https://kek.gg/i/7K8kgq.gif)
+
 
 This project is possible because of the effort of amazing people at Cranium Software
 this project is based of SmartConsole https://github.com/CraniumSoftware/SmartConsole
