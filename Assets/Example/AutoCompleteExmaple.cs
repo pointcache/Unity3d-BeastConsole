@@ -7,12 +7,12 @@ public class AutoCompleteExmaple : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        Console.RegisterCommand("crab","", this, null);
-        Console.RegisterCommand("crusty","", this, null);
-        Console.RegisterCommand("credentials","", this, null);
-        Console.RegisterCommand("credentialisation","", this, null);
-        Console.RegisterCommand("credentialisationed","", this, null);
-        Console.RegisterCommand("credulity","", this, null);
+        Console.AddCommand("crab","", this, null);
+        Console.AddCommand("crusty","", this, null);
+        Console.AddCommand("credentials","", this, null);
+        Console.AddCommand("credentialisation","", this, null);
+        Console.AddCommand("credentialisationed","", this, null);
+        Console.AddCommand("credulity","", this, null);
 	}
 	
 	// Update is called once per frame

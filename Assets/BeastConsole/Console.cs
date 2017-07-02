@@ -42,19 +42,19 @@
             gui.Initialize(m_backend, consoleOptions);
         }
 
-        public static void RegisterCommand(string name, string description, object owner, Action<string[]> callback) {
+        public static void AddCommand(string name, string description, object owner, Action<string[]> callback) {
             instance.m_backend.RegisterCommand(name, description, owner, callback);
         }
 
-        public static void UnregisterCommand(string name, object owner) {
+        public static void RemoveCommand(string name, object owner) {
             if (instance != null && instance.m_backend != null)
                 instance.m_backend.RemoveCommandIfExists(name, owner);
         }
-        public static void RegisterVariable<T>(string name, string description, Action<T> setter, object owner) {
+        public static void AddVariable<T>(string name, string description, Action<T> setter, object owner) {
             instance.m_backend.RegisterVariable<T>(setter, owner, name, description);
         }
 
-        public static void UnregisterVariable<T>(string name, object owner) {
+        public static void RemoveVariable<T>(string name, object owner) {
             if (instance != null && instance.m_backend != null)
                 instance.m_backend.UnregisterVariable<T>(name, owner);
         }

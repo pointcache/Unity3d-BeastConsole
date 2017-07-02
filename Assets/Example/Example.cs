@@ -10,13 +10,13 @@ public class Example : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
         //You need to provide a setter for a variable, and a reference to "owner".
-        Console.RegisterVariable<float>("test","some test", x => TestVar = x, this );
-        Console.RegisterCommand("moveUp", "", this, MoveUp);
+        Console.AddVariable<float>("test","some test", x => TestVar = x, this );
+        Console.AddCommand("moveUp", "", this, MoveUp);
 	}
 
     private void OnDestroy() {
-        Console.UnregisterVariable<float>("test", this);
-        Console.UnregisterCommand("moveUp", this);
+        Console.RemoveVariable<float>("test", this);
+        Console.RemoveCommand("moveUp", this);
     }
 
     private void MoveUp(string[] val) {
