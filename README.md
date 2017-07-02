@@ -23,6 +23,9 @@ BeastConsole is:
 * Autocomplete
 * Add variables 
 * Both commands and variables support any number of subscribers, modify all objects at once.
+* Multiline
+* Suggestions
+* History
 
 #Usage
 
