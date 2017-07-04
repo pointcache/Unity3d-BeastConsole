@@ -6,7 +6,7 @@
     using UnityEngine.EventSystems;
     using System;
 
-    public class AutoCompleteGuiEntry : MonoBehaviour, ISelectHandler, IDeselectHandler, ISubmitHandler {
+    public class AutoCompleteGuiEntry : GuiBase, ISelectHandler, IDeselectHandler, ISubmitHandler {
 
         private string m_line;
         internal static int s_selectedCount;
@@ -29,7 +29,10 @@
         public void OnSubmit(BaseEventData eventData) {
             m_gui.SetInputText("");
             m_gui.SelectInput();
-            m_gui.SetInputText(m_line);
+            string line = m_line;
+            if (line[line.Length - 1] != ' ')
+                line = m_line + " ";
+            m_gui.SetInputText(line);
         }
     }
 }

@@ -9,7 +9,7 @@
     using UnityEngine.EventSystems;
     using UnityEngine.UI;
 
-    internal class HistoryGuiEntry : MonoBehaviour, ISelectHandler, IDeselectHandler, ISubmitHandler {
+    internal class HistoryGuiEntry : GuiBase, ISelectHandler, IDeselectHandler, ISubmitHandler {
 
         private string m_line;
         private ConsoleGui m_gui;
@@ -34,7 +34,10 @@
                 BeastConsole.Console.ExecuteLine(m_line);
             }
             else {
-                m_gui.SetInputText(m_line);
+                string line = m_line;
+                if (line[line.Length - 1] != ' ')
+                    line = m_line + " ";
+                m_gui.SetInputText(line);
             }
             m_gui.SelectInput();
         }

@@ -38,8 +38,28 @@
         private Transform m_historyRoot;
         [SerializeField]
         private GameObject m_historyEntryTemplate;
+        [SerializeField]
+        private GameObject m_helpBox;
+
+        private bool m_beastConsoleHelp
+        {
+            get { return PlayerPrefs.GetInt("BC_BeastConsoleShowHelp") == 1 ? true : false; }
+            set {
+                m_helpBox.SetActive(value);
+                PlayerPrefs.SetInt("BC_BeastConsoleShowHelp", value ? 1 : 0);
+            }
+        }
 
         internal bool s_showConsole = false;
+        internal static bool NavigationAllowed
+        {
+            get {
+                return m_eventSystem.sendNavigationEvents;
+            }
+            set {
+                m_eventSystem.sendNavigationEvents = value;
+            }
+        }
 
         private Queue<ConsoleGuiEntry> m_entries = new Queue<ConsoleGuiEntry>();
         private int m_currentEXECUTIONhistoryIndex = 0;
@@ -49,12 +69,17 @@
         private Vector3 m_posTarget;
         private float m_lerpTime;
         private bool m_darkLine;
+        private bool m_inputactive;
+        private static EventSystem m_eventSystem;
+        private GameObject m_selected;
 
 
         internal void Initialize(ConsoleBackend backend, Options options) {
             if (!gameObject.activeSelf) {
                 return;
             }
+
+            m_eventSystem = GameObject.FindObjectOfType<EventSystem>();
             this.m_backend = backend;
             this.m_options = options;
             m_consoleRoot.anchorMin = new Vector2(0f, 0.65f);
@@ -67,7 +92,9 @@
             m_backend.RegisterCommand("clear", "clear the console log", this, Clear);
             Console.DestroyChildren(m_consoleContent.transform);
             m_historyRoot.gameObject.SetActive(false);
+            m_beastConsoleHelp = m_beastConsoleHelp;
 
+            Console.AddVariable<bool>("console.showHelp", "Shows the info box in the console", x => m_beastConsoleHelp = x, this);
         }
 
         private void OnEnable() {
@@ -82,10 +109,6 @@
                 m_inputField.ActivateInputField();
                 m_backend.ExecuteLine(text);
             }
-        }
-
-        private void HandleTextInput(string input) {
-
         }
 
         private void DrawAutoCompleteSuggestions(string str) {
@@ -103,29 +126,31 @@
                 go.GetComponentInChildren<AutoCompleteGuiEntry>().Initialize(item.Value, this);
                 var button = go.GetComponent<Button>();
             }
+            SetupNavigation(m_autocompleteRoot);
+        }
+
+        private void SetupNavigation(Transform transform) {
             int index = 0;
-            if (m_autocompleteRoot.childCount > 1) {
-                foreach (Transform tr in m_autocompleteRoot) {
-                    var button = tr.GetComponent<Button>();
+            if (transform.childCount > 1) {
+                foreach (Transform tr in transform) {
+                    var button = tr.GetComponent<Selectable>();
                     var nav = button.navigation;
                     if (index == 0) {
-                        nav.selectOnDown = m_autocompleteRoot.GetChild(1).GetComponent<Button>();
+                        nav.selectOnDown = transform.GetChild(1).GetComponent<Selectable>();
                     }
                     else
-                        if (index == m_autocompleteRoot.childCount - 1) {
-                        nav.selectOnUp = m_autocompleteRoot.GetChild(m_autocompleteRoot.childCount - 2).GetComponent<Button>();
+                        if (index == transform.childCount - 1) {
+                        nav.selectOnUp = transform.GetChild(transform.childCount - 2).GetComponent<Selectable>();
                     }
                     else {
-                        nav.selectOnDown = m_autocompleteRoot.GetChild(index + 1).GetComponent<Button>();
-                        nav.selectOnUp = m_autocompleteRoot.GetChild(index - 1).GetComponent<Button>();
-
+                        nav.selectOnDown = transform.GetChild(index + 1).GetComponent<Selectable>();
+                        nav.selectOnUp = transform.GetChild(index - 1).GetComponent<Selectable>();
                     }
 
                     button.navigation = nav;
                     index++;
                 }
             }
-            //m_autocompleteRoot.position = GetLocalCaretPosition();
         }
 
         private Vector2 GetLocalCaretPosition() {
@@ -175,6 +200,8 @@
                     m_posTarget = Vector2.zero;
                     m_lerpTime = 0;
                     m_consoleShown = true;
+                    NavigationAllowed = false;
+
                 }
                 else {
                     m_autocompleteRoot.gameObject.SetActive(false);
@@ -185,6 +212,7 @@
                     m_lerpTime = 0;
                     m_scrollBar.value = 0;
                     m_consoleShown = false;
+                    NavigationAllowed = true;
                 }
             }
 
@@ -209,12 +237,14 @@
                 SelectInput();
 
             }
-            //if (AutoCompleteGuiEntry.s_selectedCount == 0) {
-            //    SelectInput();
-            //}
+
         }
 
+
         private void HandleInput() {
+
+            m_selected = m_eventSystem.currentSelectedGameObject;
+            m_inputactive = m_inputField.gameObject == m_selected && m_inputField.isFocused;
 
             if (Input.GetKeyDown(m_options.ConsoleKey)) {
                 s_showConsole = true;
@@ -223,15 +253,17 @@
             }
             else
             if (Input.GetKeyDown(KeyCode.UpArrow)) {
-                GameObject sel = EventSystem.current.currentSelectedGameObject;
-                if (m_inputField.gameObject == sel) {
+                if (m_inputactive) {
                     DrawHistory();
                     if (m_historyRoot.childCount > 0)
-                        EventSystem.current.SetSelectedGameObject(m_historyRoot.GetChild(m_historyRoot.childCount - 1).gameObject);
+                        m_eventSystem.SetSelectedGameObject(m_historyRoot.GetChild(m_historyRoot.childCount - 1).gameObject);
                 }
                 else {
-
-
+                    if (m_selected) {
+                        var selectable = m_selected.GetComponent<Selectable>();
+                        if (selectable.navigation.selectOnUp != null)
+                            m_eventSystem.SetSelectedGameObject(selectable.navigation.selectOnUp.gameObject);
+                    }
                 }
 
                 //if (m_inputField.isFocused && m_backend.m_commandHistory.Count > 0) {
@@ -267,15 +299,32 @@
 
             else
             if (Input.GetKeyDown(KeyCode.DownArrow)) {
-                GameObject sel = EventSystem.current.currentSelectedGameObject;
-                if (m_inputField.gameObject == sel) {
+                if (m_inputactive) {
                     if (m_inputField.text != string.Empty) {
-                        //SelectInput();
                         EventSystem.current.SetSelectedGameObject(SelectAutoComplete());
                     }
                 }
+                else {
+                    if (m_selected) {
+                        var selectable = m_selected.GetComponent<Selectable>();
+                        if (selectable.navigation.selectOnDown != null)
+                            m_eventSystem.SetSelectedGameObject(selectable.navigation.selectOnDown.gameObject);
+                    }
+                }
             }
+            else
+                if (Input.GetKeyDown(KeyCode.Return)) {
+                if (m_inputactive) {
 
+                }
+                else {
+                    if (m_selected) {
+                        var guibase = m_selected.GetComponent<GuiBase>();
+                        if (guibase != null)
+                            ((ISubmitHandler)guibase).OnSubmit(null);
+                    }
+                }
+            }
             else
             if (Input.anyKeyDown) {
                 SelectInput();
@@ -304,10 +353,18 @@
                 var go = Instantiate(m_historyEntryTemplate, m_historyRoot, false);
                 go.GetComponentInChildren<HistoryGuiEntry>().Initialize(list[i], this);
             }
+
+            SetupNavigation(m_historyRoot);
+
         }
 
         internal void SelectInput() {
-            EventSystem.current.SetSelectedGameObject(m_inputField.gameObject);
+            m_inputField.Select();
+            m_inputField.ActivateInputField();
+            m_inputField.selectionAnchorPosition = 0;
+            m_inputField.selectionFocusPosition = 0;
+            m_inputField.MoveTextEnd(false);
+            //m_inputField.ActivateInputField();
         }
 
         internal void OnWriteLine(string message) {
@@ -330,11 +387,8 @@
             StartCoroutine(SetScrollBarToZero());
         }
 
-
-
         private void OnExecutedLine(string line) {
             m_currentEXECUTIONhistoryIndex = m_backend.m_commandHistory.Count - 1;
-
         }
 
         private IEnumerator SetScrollBarToZero() {
@@ -417,11 +471,23 @@
 
         private void OnDestroy() {
             StopAllCoroutines();
+        }
 
+        private void OnDisable() {
+            NavigationAllowed = true;
         }
 
         internal void SetInputText(string text) {
             m_inputField.text = text;
+        }
+
+        private T GetInterface<T>(GameObject inObj) where T : class {
+            if (!typeof(T).IsInterface) {
+                Debug.LogError(typeof(T).ToString() + ": is not an actual interface!");
+                return null;
+            }
+            var objs = inObj.GetComponents<Component>();
+            return objs.OfType<T>().FirstOrDefault();
         }
     }
 }
