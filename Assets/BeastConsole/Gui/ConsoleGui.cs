@@ -72,6 +72,7 @@
         private bool m_inputactive;
         private static EventSystem m_eventSystem;
         private GameObject m_selected;
+        private ConsoleGuiEntry m_lastEntry;
 
 
         internal void Initialize(ConsoleBackend backend, Options options) {
@@ -88,7 +89,7 @@
             m_inputField.onValueChanged.AddListener(DrawAutoCompleteSuggestions);
             m_inputField.onEndEdit.AddListener(HandleInput);
             m_backend.OnWriteLine += OnWriteLine;
-            m_backend.OnExecutedLine += OnExecutedLine;
+            m_backend.OnExecutedCommand += OnExecutedLine;
             m_backend.RegisterCommand("clear", "clear the console log", this, Clear);
             Console.DestroyChildren(m_consoleContent.transform);
             m_historyRoot.gameObject.SetActive(false);
@@ -372,7 +373,6 @@
             if (m_entries.Count > m_options.MaxConsoleLines) {
                 entry = m_entries.Dequeue().GetComponent<ConsoleGuiEntry>();
                 m_entries.Enqueue(entry);
-                //OffsetAllEntriesOnce();
                 entry.transform.SetAsLastSibling();
             }
             else {
@@ -384,10 +384,13 @@
             entry.Clear();
             entry.Initialize(message, m_options.LinePadding, m_darkLine);
             m_darkLine = !m_darkLine;
+            m_lastEntry = entry;
             StartCoroutine(SetScrollBarToZero());
         }
 
-        private void OnExecutedLine(string line) {
+        private void OnExecutedLine(string line, Command command) {
+            if (m_lastEntry.Text == line)
+                m_lastEntry.SetCommand(command);
             m_currentEXECUTIONhistoryIndex = m_backend.m_commandHistory.Count - 1;
         }
 

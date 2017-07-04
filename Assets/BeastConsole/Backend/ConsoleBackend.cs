@@ -27,7 +27,7 @@ namespace BeastConsole.Backend {
     internal class ConsoleBackend {
 
         internal Action<string> OnWriteLine = delegate { };
-        internal Action<string> OnExecutedLine = delegate { };
+        internal Action<string, Command> OnExecutedCommand = delegate { };
 
         internal GameObject m_textInput = null;
         internal AutoCompleteDictionary<Command> m_commandDictionary = new AutoCompleteDictionary<Command>();
@@ -74,7 +74,7 @@ namespace BeastConsole.Backend {
         }
 
 
-        public void Print(string message) {
+        internal void Print(string message) {
             WriteLine(message);
         }
 
@@ -82,22 +82,24 @@ namespace BeastConsole.Backend {
         /// <summary>
         /// Execute a string as if it were a single line of input to the console
         /// </summary>
-        public void ExecuteLine(string inputLine) {
+        internal void ExecuteLine(string inputLine) {
             string[] words = CComParameterSplit(inputLine);
             if (words.Length > 0) {
-                if (m_masterDictionary.ContainsKey(words[0])) {
+                Command com = null;
+                m_masterDictionary.TryGetValue(words[0], out com);
+                if (com!=null) {
                     WriteLine("<b>=> </b><color=lime>" + inputLine + "</color>");
                     m_masterDictionary[words[0]].Execute(inputLine);
+                    m_commandHistory.Add(inputLine);
+                    OnExecutedCommand(inputLine, com);
                 }
                 else {
                     WriteLine("<color=red>Unrecognised command or variable name: " + words[0] + "</color>");
                 }
-                m_commandHistory.Add(inputLine);
-                OnExecutedLine(inputLine);
             }
         }
         // public static void ExecuteFile( string path ) {} //...
-        public void RemoveCommandIfExists(string name, object owner) {
+        internal void RemoveCommandIfExists(string name, object owner) {
             Command comm = null;
             m_commandDictionary.TryGetValue(name, out comm);
             if (comm != null) {
@@ -112,7 +114,7 @@ namespace BeastConsole.Backend {
         /// Register a console command with an example of usage and a help description
         /// e.g. SmartConsole.RegisterCommand( "echo", "echo <string>", "writes <string> to the console log", SmartConsole.Echo );
         /// </summary>
-        public void RegisterCommand(string name, string helpDescription, object owner, Action<string[]> callback) {
+        internal void RegisterCommand(string name, string helpDescription, object owner, Action<string[]> callback) {
 
             Command comm = null;
             m_commandDictionary.TryGetValue(name, out comm);
@@ -128,11 +130,11 @@ namespace BeastConsole.Backend {
                 command.AddCommand(owner, callback);
                 m_commandDictionary.Add(name, command);
                 m_masterDictionary.Add(name, command);
-                m_commandsTrie.Add(new TrieEntry<string>(name,name));
+                m_commandsTrie.Add(new TrieEntry<string>(name, name));
             }
         }
 
-        public void RegisterVariable<T>(Action<T> setter, object owner, string name, string desc) {
+        internal void RegisterVariable<T>(Action<T> setter, object owner, string name, string desc) {
             Command comm = null;
             m_variableDictionary.TryGetValue(name, out comm);
             if (comm != null) {
@@ -144,12 +146,12 @@ namespace BeastConsole.Backend {
                 Variable<T> returnValue = new Variable<T>(name, desc, setter, owner, this);
                 m_variableDictionary.Add(name, returnValue);
                 m_masterDictionary.Add(name, returnValue);
-                m_commandsTrie.Add(new TrieEntry<string>(name,name));
+                m_commandsTrie.Add(new TrieEntry<string>(name, name));
 
             }
         }
 
-        public void UnregisterVariable<T>(string name, object owner) {
+        internal void UnregisterVariable<T>(string name, object owner) {
 
             Command comm = null;
             m_variableDictionary.TryGetValue(name, out comm);
@@ -165,7 +167,7 @@ namespace BeastConsole.Backend {
         /// <summary>
         /// Destroy a console variable (so its name can be reused)
         /// </summary>
-        public void UnregisterVariable<T>(Variable<T> variable) where T : new() {
+        internal void UnregisterVariable<T>(Variable<T> variable) where T : new() {
             m_variableDictionary.Remove(variable.m_name);
             m_masterDictionary.Remove(variable.m_name);
         }
@@ -297,10 +299,10 @@ namespace BeastConsole.Backend {
         //             }
         //     }
         // }
-        public string[] CComParameterSplit(string parameters) {
+        internal string[] CComParameterSplit(string parameters) {
             return parameters.Split(new char[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
         }
-        public string[] CComParameterSplit(string parameters, int requiredParameters) {
+        internal string[] CComParameterSplit(string parameters, int requiredParameters) {
             string[] split = CComParameterSplit(parameters);
             if (split.Length < (requiredParameters + 1)) {
                 WriteLine("Error: not enough parameters for command. Expected " + requiredParameters + " found " + (split.Length - 1));
