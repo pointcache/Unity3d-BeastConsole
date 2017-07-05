@@ -1,7 +1,8 @@
 
 ![License MIT](https://img.shields.io/badge/license-MIT-green.svg)
 
-![logo](https://kek.gg/i/5MHLFz.png)
+# Beast Console
+
 ![screen](https://kek.gg/i/7WYj78.png)
 ![screen](https://kek.gg/i/7K8kgq.gif)
 
@@ -17,9 +18,10 @@ BeastConsole is:
   * Console backend (SmartConsole)- a backend allowing command registration and variables
   * Console ui - prefabs implementing console display
 
-#Console
+# Console
 * Backend is created by folks at CraniumSoftware, heavily cleaned up and refactored.
-* Register your own arbitrary commands/methods and provide parameters
+* Use attributes to bind methods/fields/properties 
+* Register your own arbitrary commands/methods for any object(non monob as well) and provide parameters
 * Autocomplete
 * Add variables 
 * Both commands and variables support any number of subscribers, modify all objects at once.
@@ -27,11 +29,51 @@ BeastConsole is:
 * Suggestions
 * History
 
-#Usage
+# Usage
 
 setup:
  * drop EventSystem in scene, add BeastConsole to game object, launch - done.
  
+Attributes:
+
+```csharp
+
+public class AttributeTest : MonoBehaviour {
+
+    [ConsoleVariable("testvar", "")]
+    public float TestVariable = 5f;
+
+    [ConsoleVariable("testproperty", "")]
+    public bool TestPropertyVariable
+    {
+        set {
+            Console.WriteLine("testproperty was set to: " + value);
+        }
+    }
+
+
+    [ConsoleCommand("testMethod", "")]
+	void TestMethod() {
+        BeastConsole.Console.WriteLine("test method works");
+    }
+
+    [ConsoleCommand("testMethodWithParams", "")]
+    public void TestMethodWithParams(float param1) {
+        BeastConsole.Console.WriteLine("works :" + param1.ToString());
+
+    }
+
+    [ConsoleCommand("testMethodWith2Params", "")]
+    public void TestMethodWith2Params(float param1, int param2) {
+        BeastConsole.Console.WriteLine("works :" + (param1+ param2).ToString());
+
+    }
+}
+
+
+```
+
+Manual:
 
 ```csharp
 
@@ -45,13 +87,12 @@ private void MoveUp(string[] val) {
 }
 
 ```
-
-You should unregister commands and variables when done with an object.
+Manual method requires you to unregister commands and variables when done with an object.
 
 See Example folder for more examples.
 
 
 
 
-#TODO:
+# TODO:
  check Projects page
