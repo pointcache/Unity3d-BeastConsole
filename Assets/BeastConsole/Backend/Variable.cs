@@ -14,10 +14,7 @@
         internal Action<T> m_setter;
         internal Dictionary<object, Action<T>> m_dict = new Dictionary<object, Action<T>>();
 
-        internal Variable(string name, string desc, Action<T> setter, object owner, ConsoleBackend backend) {
-            m_name = name;
-            m_help = desc;
-            m_backend = backend;
+        internal Variable(string name, string desc, Action<T> setter, object owner, ConsoleBackend backend) : base(name, desc, backend) {
             Add(owner, setter);
         }
 
@@ -43,7 +40,7 @@
                 if (split.Length == 2) {
                     variable.SetFromString(split[1]);
                     conjunction = " has been set to ";
-                }   
+                }
                 m_backend.WriteLine(variable.m_name + conjunction + split[1]);
             }
         }

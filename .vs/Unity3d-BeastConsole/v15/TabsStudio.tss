@@ -2,58 +2,34 @@
 <ArrayOfArrayOfArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <ArrayOfArrayOfString>
     <ArrayOfString>
-      <string>d:\work\unity3d-beastconsole\assets\beastconsole\gui\consolegui.cs</string>
+      <string>d:\work\unity3d-beastconsole\assets\example\attributetest.cs</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>D:\Work\Unity3d-BeastConsole\Assets\BeastConsole\Backend\AutocompleteDictionary.cs</string>
+      <string>d:\work\unity3d-beastconsole\assets\example\autocompleteexmaple.cs</string>
     </ArrayOfString>
     <ArrayOfString>
       <string>d:\work\unity3d-beastconsole\assets\beastconsole\backend\command.cs</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>d:\work\unity3d-beastconsole\assets\beastconsole\backend\variable.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\Work\Unity3d-BeastConsole\Assets\BeastConsole\Gui\ConsoleGuiEntry.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>d:\work\unity3d-beastconsole\assets\beastconsole\console.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\Work\Unity3d-BeastConsole\Assets\Example\Example.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>d:\work\unity3d-beastconsole\assets\example\exampleconfig.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\Work\Unity3d-BeastConsole\Assets\Example\MultilineExample.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
       <string>d:\work\unity3d-beastconsole\assets\beastconsole\backend\consolebackend.cs</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>D:\Work\Unity3d-BeastConsole\Assets\Example\AutoCompleteExmaple.cs</string>
+      <string>d:\work\unity3d-beastconsole\assets\beastconsole\gui\consolegui.cs</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>D:\Work\Unity3d-BeastConsole\Assets\BeastConsole\Backend\Trie.cs</string>
+      <string>D:\Work\Unity3d-BeastConsole\Assets\ExampleConfigAttribute.cs</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>d:\work\unity3d-beastconsole\assets\beastconsole\backend\trieentry.cs</string>
+      <string>D:\Work\Unity3d-BeastConsole\Assets\Example\ExampleConfigAttribute.cs</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>D:\Work\Unity3d-BeastConsole\Assets\Example\Editor\EditorTests.cs</string>
+      <string>D:\Work\Unity3d-BeastConsole\Assets\Example\ExampleConfigManual.cs</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>D:\Work\Unity3d-BeastConsole\Assets\BeastConsole\Gui\AutoCompleteGuiEntry.cs</string>
+      <string>d:\work\unity3d-beastconsole\assets\example\multilineexample.cs</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>D:\Work\Unity3d-BeastConsole\Assets\BeastConsole\Gui\ConsoleGuiInputField.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\Work\Unity3d-BeastConsole\Assets\BeastConsole\Gui\HistoryGuiEntry.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\Work\Unity3d-BeastConsole\Assets\BeastConsole\Gui\GuiBase.cs</string>
+      <string>d:\work\unity3d-beastconsole\assets\beastconsole\backend\variable.cs</string>
     </ArrayOfString>
   </ArrayOfArrayOfString>
 </ArrayOfArrayOfArrayOfString>

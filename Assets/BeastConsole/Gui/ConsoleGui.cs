@@ -238,9 +238,7 @@
                 SelectInput();
 
             }
-
         }
-
 
         private void HandleInput() {
 
@@ -266,37 +264,12 @@
                             m_eventSystem.SetSelectedGameObject(selectable.navigation.selectOnUp.gameObject);
                     }
                 }
-
-                //if (m_inputField.isFocused && m_backend.m_commandHistory.Count > 0) {
-                //    m_currentEXECUTIONhistoryIndex = Mathf.Clamp(m_currentEXECUTIONhistoryIndex, 0, m_backend.m_commandHistory.Count - 1);
-                //    m_inputField.text = m_backend.m_commandHistory[m_currentEXECUTIONhistoryIndex];
-                //    m_inputField.caretPosition = m_inputField.text.Length;
-                //    m_currentEXECUTIONhistoryIndex--;
-                //}
             }
 
             else
             if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Backspace)) {
                 delete_back_to_dot();
             }
-
-            //else
-            //if (Input.GetKeyDown(KeyCode.Return)) {
-            //    GameObject sel = EventSystem.current.currentSelectedGameObject;
-            //    if (m_inputField.gameObject == sel && m_inputField.isFocused)
-            //        HandleTextInput(m_inputField.text);
-            //    else {
-            //        //if (sel) {
-            //        //    if (sel.GetComponent<AutoCompleteGuiEntry>()) {
-            //        //        m_inputField.text = sel.GetComponentInChildren<Text>().text + " ";
-            //        //        SelectInput();
-            //        //        m_inputField.ForceLabelUpdate();
-            //        //        m_inputField.selectionFocusPosition = 0;
-            //        //        m_inputField.caretPosition = m_inputField.text.Length;
-            //        //    }
-            //        //}
-            //    }
-            //}
 
             else
             if (Input.GetKeyDown(KeyCode.DownArrow)) {
@@ -319,16 +292,52 @@
 
                 }
                 else {
-                    if (m_selected) {
-                        var guibase = m_selected.GetComponent<GuiBase>();
-                        if (guibase != null)
-                            ((ISubmitHandler)guibase).OnSubmit(null);
-                    }
+                    sendSubmitEvent();
+                }
+            }
+            else
+                if (Input.GetKey(KeyCode.LeftArrow)) {
+                if (m_inputactive) {
+
+                }
+                else {
+                    SelectInput();
+                }
+            }
+            else
+                if (Input.GetKey(KeyCode.RightArrow)) {
+                if (m_inputactive) {
+
+                }
+                else {
+                    sendSubmitEvent();
+                }
+            }
+            else
+                if (Input.GetKey(KeyCode.Tab)) {
+                if (m_inputactive) {
+
+                }
+                else {
+                    sendSubmitEvent();
                 }
             }
             else
             if (Input.anyKeyDown) {
-                SelectInput();
+                if (m_inputactive) {
+
+                }
+                else {
+                    SelectInput();
+                }
+            }
+        }
+
+        private void sendSubmitEvent() {
+            if (m_selected) {
+                var guibase = m_selected.GetComponent<GuiBase>();
+                if (guibase != null)
+                    ((ISubmitHandler)guibase).OnSubmit(null);
             }
         }
 

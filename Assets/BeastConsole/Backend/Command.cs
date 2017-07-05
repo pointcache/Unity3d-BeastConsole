@@ -7,11 +7,16 @@
     internal class Command {
         internal Action<string[]> m_command = null;
         internal string m_name = null;
-        internal string m_paramsExample = "";
-        internal string m_help = "(no description)";
+        internal string m_description = "(no description)";
         internal ConsoleBackend m_backend;
 
         internal Dictionary<object, Action<string[]>> m_commanddict = new Dictionary<object, Action<string[]>>();
+
+        internal Command(string name, string description, ConsoleBackend backend) {
+            m_name = name;
+            m_description = description;
+            m_backend = backend;
+        }
 
         internal void AddCommand(object owner, Action<string[]> command) {
             m_commanddict.Add(owner, command);
@@ -32,6 +37,30 @@
 
         public override string ToString() {
             return m_name;
+        }
+
+        protected object StringToObject(string value, Type type) {
+            object result = null;
+
+            try {
+                if (type == typeof(bool)) {
+                    if (value == "0") {
+                        result = System.Convert.ChangeType("false", typeof(bool));
+                    }
+                    else if (value == "1") {
+                        result = System.Convert.ChangeType("true", typeof(bool));
+                    }
+                    else
+                        result = System.Convert.ChangeType(value, type);
+                }
+                else
+                    result = System.Convert.ChangeType(value, type);
+            }
+            catch (Exception e) {
+                BeastConsole.Console.WriteLine("command/variable | " + m_name + " : " + e.Message);
+            }
+
+            return result;
         }
     }
 }

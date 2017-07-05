@@ -1,4 +1,4 @@
-namespace BeastConsole.Backend {
+﻿namespace BeastConsole.Backend {
 
     // Copyright (c) 2014 Cranium Software
     // SmartConsole
@@ -18,6 +18,8 @@ namespace BeastConsole.Backend {
     using System.Collections;
     using System.Collections.Generic;
     using System;
+    using System.Reflection;
+    using System.Linq;
 
     // SE: broadly patterned after the debug console implementation from GLToy...
     // https://code.google.com/p/gltoy/source/browse/trunk/GLToy/Independent/Core/Console/GLToy_Console.h
@@ -32,6 +34,7 @@ namespace BeastConsole.Backend {
         internal GameObject m_textInput = null;
         internal AutoCompleteDictionary<Command> m_commandDictionary = new AutoCompleteDictionary<Command>();
         internal AutoCompleteDictionary<Command> m_variableDictionary = new AutoCompleteDictionary<Command>();
+        internal AutoCompleteDictionary<Command> m_attributeCommandsDictionary = new AutoCompleteDictionary<Command>();
         internal AutoCompleteDictionary<Command> m_masterDictionary = new AutoCompleteDictionary<Command>();
         internal Trie<string> m_commandsTrie = new Trie<string>();
         internal List<string> m_commandHistory = new List<string>();
@@ -51,16 +54,49 @@ namespace BeastConsole.Backend {
             // Application.logMessageReceived += LogHandler;
 #endif
 
-
             RegisterCommand("echo", "writes <string> to the console log (alias for echo)", this, Echo);
-            RegisterCommand("help", "displays help information for console command where available", this, Help);
             RegisterCommand("list", "lists all currently registered console variables", this, ListCvars);
             RegisterCommand("print", "writes <string> to the console log", this, Echo);
             RegisterCommand("quit", "quit the game (not sure this works with iOS/Android)", this, Quit);
+            //RegisterCommand("help", "displays help information for console command where available", this, Help);
             // RegisterCommand("callstack.warning", "display the call stack for the last warning message", LastWarningCallStack);
             // RegisterCommand("callstack.error", "display the call stack for the last error message", LastErrorCallStack);
             // RegisterCommand("callstack.exception", "display the call stack for the last exception message", LastExceptionCallStack);
+            GetAllConsoleCommandAttributes();
+            GetAllConsoleVariableAttributes();
+        }
 
+        internal void GetAllConsoleCommandAttributes() {
+
+            var methods = Assembly.GetCallingAssembly().GetTypes()
+                  .SelectMany(t => t.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance))
+                  .Where(m => m.GetCustomAttributes(typeof(ConsoleCommandAttribute), false).Length > 0)
+                  .ToArray();
+
+            foreach (var m in methods) {
+                RegisterAttributeCommand(m, m.GetCustomAttributes(typeof(ConsoleCommandAttribute), false)[0] as ConsoleCommandAttribute);
+            }
+        }
+
+        internal void GetAllConsoleVariableAttributes() {
+
+            var fields = Assembly.GetCallingAssembly().GetTypes()
+                  .SelectMany(t => t.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance))
+                  .Where(m => m.GetCustomAttributes(typeof(ConsoleVariableAttribute), false).Length > 0)
+                  .ToArray();
+
+            foreach (var f in fields) {
+                RegisterAttributeVariableField(f, f.GetCustomAttributes(typeof(ConsoleVariableAttribute), false)[0] as ConsoleVariableAttribute);
+            }
+
+            var props = Assembly.GetCallingAssembly().GetTypes()
+                  .SelectMany(t => t.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance))
+                  .Where(m => m.GetCustomAttributes(typeof(ConsoleVariableAttribute), false).Length > 0)
+                  .ToArray();
+
+            foreach (var p in props) {
+                RegisterAttributeVariableProp(p, p.GetCustomAttributes(typeof(ConsoleVariableAttribute), false)[0] as ConsoleVariableAttribute);
+            }
         }
 
         internal void WriteLine(string line) {
@@ -87,8 +123,8 @@ namespace BeastConsole.Backend {
             if (words.Length > 0) {
                 Command com = null;
                 m_masterDictionary.TryGetValue(words[0], out com);
-                if (com!=null) {
-                    WriteLine("<b>=> </b><color=lime>" + inputLine + "</color>");
+                if (com != null) {
+                    WriteLine("<b>> </b><color=lime>" + inputLine + "</color>");
                     m_masterDictionary[words[0]].Execute(inputLine);
                     m_commandHistory.Add(inputLine);
                     OnExecutedCommand(inputLine, com);
@@ -117,16 +153,13 @@ namespace BeastConsole.Backend {
         internal void RegisterCommand(string name, string helpDescription, object owner, Action<string[]> callback) {
 
             Command comm = null;
-            m_commandDictionary.TryGetValue(name, out comm);
+            m_masterDictionary.TryGetValue(name, out comm);
             if (comm != null) {
                 comm.AddCommand(owner, callback);
                 return;
             }
             else {
-                Command command = new Command();
-                command.m_name = name;
-                command.m_help = helpDescription;
-                command.m_backend = this;
+                Command command = new Command(name, helpDescription, this);
                 command.AddCommand(owner, callback);
                 m_commandDictionary.Add(name, command);
                 m_masterDictionary.Add(name, command);
@@ -134,9 +167,25 @@ namespace BeastConsole.Backend {
             }
         }
 
+        private void RegisterAttributeCommand(MethodInfo info, ConsoleCommandAttribute attr) {
+            Command comm = null;
+            m_masterDictionary.TryGetValue(attr.name, out comm);
+            if (comm != null) {
+                Debug.LogError("Multiple Attribute ConsoleCommands with the same name: " + attr.name + " , this is not allowed.");
+                return;
+            }
+            else {
+                AttributeCommand cmd = new AttributeCommand(attr.name, attr.description, this);
+                cmd.Initialize(info);
+                m_attributeCommandsDictionary.Add(attr.name, cmd);
+                m_masterDictionary.Add(attr.name, cmd);
+                m_commandsTrie.Add(new TrieEntry<string>(attr.name, attr.name));
+            }
+        }
+
         internal void RegisterVariable<T>(Action<T> setter, object owner, string name, string desc) {
             Command comm = null;
-            m_variableDictionary.TryGetValue(name, out comm);
+            m_masterDictionary.TryGetValue(name, out comm);
             if (comm != null) {
                 var variable = comm as Variable<T>;
                 variable.Add(owner, setter);
@@ -148,6 +197,38 @@ namespace BeastConsole.Backend {
                 m_masterDictionary.Add(name, returnValue);
                 m_commandsTrie.Add(new TrieEntry<string>(name, name));
 
+            }
+        }
+
+        internal void RegisterAttributeVariableField(FieldInfo info, ConsoleVariableAttribute attr) {
+            Command comm = null;
+            m_masterDictionary.TryGetValue(attr.name, out comm);
+            if (comm != null) {
+                Debug.LogError("Multiple Attribute Variables with the same name: " + attr.name + " , this is not allowed.");
+                return;
+            }
+            else {
+                FieldCommand cmd = new FieldCommand(attr.name, attr.description, this);
+                cmd.Initialize(info);
+                m_variableDictionary.Add(attr.name, cmd);
+                m_masterDictionary.Add(attr.name, cmd);
+                m_commandsTrie.Add(new TrieEntry<string>(attr.name, attr.name));
+            }
+        }
+
+        internal void RegisterAttributeVariableProp(PropertyInfo info, ConsoleVariableAttribute attr) {
+            Command comm = null;
+            m_masterDictionary.TryGetValue(attr.name, out comm);
+            if (comm != null) {
+                Debug.LogError("Multiple Attribute Variables with the same name: " + attr.name + " , this is not allowed.");
+                return;
+            }
+            else {
+                PropertyCommand cmd = new PropertyCommand(attr.name, attr.description, this);
+                cmd.Initialize(info);
+                m_variableDictionary.Add(attr.name, cmd);
+                m_masterDictionary.Add(attr.name, cmd);
+                m_commandsTrie.Add(new TrieEntry<string>(attr.name, attr.name));
             }
         }
 
@@ -172,27 +253,27 @@ namespace BeastConsole.Backend {
             m_masterDictionary.Remove(variable.m_name);
         }
 
-        private void Help(string[] parameters) {
-            // try and lay it out nicely...
-            const int nameLength = 25;
-            const int exampleLength = 35;
-            foreach (Command command in m_commandDictionary.Values) {
-                string outputString = command.m_name;
-                for (int i = command.m_name.Length; i < nameLength; ++i) {
-                    outputString += " ";
-                }
-                if (command.m_paramsExample.Length > 0) {
-                    outputString += " example: " + command.m_paramsExample;
-                }
-                else {
-                    outputString += "          ";
-                }
-                for (int i = command.m_paramsExample.Length; i < exampleLength; ++i) {
-                    outputString += " ";
-                }
-                WriteLine(outputString + command.m_help);
-            }
-        }
+        //private void Help(string[] parameters) {
+        //    // try and lay it out nicely...
+        //    const int nameLength = 25;
+        //    const int exampleLength = 35;
+        //    foreach (Command command in m_commandDictionary.Values) {
+        //        string outputString = command.m_name;
+        //        for (int i = command.m_name.Length; i < nameLength; ++i) {
+        //            outputString += " ";
+        //        }
+        //        if (command.m_paramsExample.Length > 0) {
+        //            outputString += " example: " + command.m_paramsExample;
+        //        }
+        //        else {
+        //            outputString += "          ";
+        //        }
+        //        for (int i = command.m_paramsExample.Length; i < exampleLength; ++i) {
+        //            outputString += " ";
+        //        }
+        //        WriteLine(outputString + command.m_description);
+        //    }
+        //}
 
         private void Echo(string[] parameters) {
             string outputMessage = "";
@@ -227,7 +308,7 @@ namespace BeastConsole.Backend {
                 for (int i = variable.m_name.Length; i < nameLength; ++i) {
                     outputString += " ";
                 }
-                WriteLine(outputString + variable.m_help);
+                WriteLine(outputString + variable.m_description);
             }
         }
 

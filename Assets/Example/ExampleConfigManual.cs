@@ -5,11 +5,11 @@ using UnityEngine;
 
 
 /// <summary>
-/// This is an example of how easily you can make a global config.
+/// This example is made by manually registering console variables. Most of the time you would want to 
+/// use an attribute but sometimes you would need a manual method (for example for registering 
+/// non monobehaviors.
 /// </summary>
-
-
-public class ExampleConfig : MonoBehaviour {
+public class ExampleConfigManual : MonoBehaviour {
 
     public float Volume = 1f;
     public bool Vsync = false;
