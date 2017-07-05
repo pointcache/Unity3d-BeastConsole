@@ -3,7 +3,7 @@
 
 # Beast Console
 
-![screen](https://kek.gg/i/7WYj78.png)
+![screen](https://kek.gg/i/3zZFVr.png)
 ![screen](https://kek.gg/i/7K8kgq.gif)
 
 
