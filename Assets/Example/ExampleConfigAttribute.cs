@@ -9,7 +9,7 @@ public class ExampleConfigAttribute : MonoBehaviour {
     public float PlayerMoney = 10000f;
 
     private int _playerPhysicsLayer;
-    [ConsoleVariable("player.physicsLayer", "")]
+    [ConsoleVariable("player.physicsLayer")]
     public int PlayerPhysicsLayer
     {
         set {

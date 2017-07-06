@@ -12,5 +12,10 @@
             this.name = name;
             this.description = description;
         }
+
+        public ConsoleVariableAttribute(string name) {
+            this.name = name;
+            this.description = "no description";
+        }
     }
 }
