@@ -23,7 +23,6 @@ BeastConsole is:
 * Use attributes to bind methods/fields/properties 
 * Register your own arbitrary commands/methods for any object(non monob as well) and provide parameters
 * Autocomplete
-* Add variables 
 * Both commands and variables support any number of subscribers, modify all objects at once.
 * Multiline
 * Suggestions
