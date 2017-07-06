@@ -28,6 +28,7 @@ BeastConsole is:
 * Multiline
 * Suggestions
 * History
+* Out of the box support for RVar(not included)  https://github.com/pointcache/unity-reactive-var
 
 # Usage
 
