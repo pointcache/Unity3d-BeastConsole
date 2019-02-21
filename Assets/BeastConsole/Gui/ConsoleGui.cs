@@ -1,435 +1,542 @@
-﻿namespace BeastConsole.GUI {
-
-    using System.Collections;
+﻿namespace BeastConsole.GUI
+{
     using System.Collections.Generic;
+#pragma warning disable 0649
     using System.Linq;
+    using System.Text;
     using BeastConsole.Backend;
     using BeastConsole.Backend.Internal;
     using UnityEngine;
-    using UnityEngine.EventSystems;
-    using UnityEngine.UI;
 
-    internal class ConsoleGui : MonoBehaviour {
+    internal class ConsoleGui
+    {
+        public static event System.Action<bool> OnStateChanged = delegate { };
 
         internal Options m_options;
         [System.Serializable]
-        internal class Options {
+        internal class Options
+        {
             public KeyCode ConsoleKey = KeyCode.BackQuote;
             public float TweenTime = 0.4f;
             public int MaxConsoleLines = 120;
             public float LinePadding = 10;
-        }
+            public bool LogHandler = true;
+            public GUISkin skin;
 
-        [SerializeField]
-        private GameObject m_entryTemplate;
-        [SerializeField]
-        private GameObject m_consoleContent;
-        [SerializeField]
-        private RectTransform m_consoleRoot;
-        [SerializeField]
-        private InputField m_inputField;
-        [SerializeField]
-        private Scrollbar m_scrollBar;
-        [SerializeField]
-        private Transform m_autocompleteRoot;
-        [SerializeField]
-        private Transform m_autocompleteEntryTemplate;
-        [SerializeField]
-        private Transform m_historyRoot;
-        [SerializeField]
-        private GameObject m_historyEntryTemplate;
-        [SerializeField]
-        private GameObject m_helpBox;
+            public Colors colors = new Colors();
 
-        private bool m_beastConsoleHelp
-        {
-            get { return PlayerPrefs.GetInt("BC_BeastConsoleShowHelp") == 1 ? true : false; }
-            set {
-                m_helpBox.SetActive(value);
-                PlayerPrefs.SetInt("BC_BeastConsoleShowHelp", value ? 1 : 0);
+            [System.Serializable]
+            public class Colors
+            {
+                public Color error = new Color(1, 1, 1, 1);
+                public Color warning = new Color(1, 1, 1, 1);
+                public Color log = new Color(1, 1, 1, 1);
+                public Color command = new Color(1, 1, 1, 1);
+                public Color suggestionGreyed = new Color(1, 1, 1, 1);
             }
         }
 
-        internal bool s_showConsole = false;
-        internal static bool NavigationAllowed
-        {
-            get {
-                return m_eventSystem.sendNavigationEvents;
-            }
-            set {
-                m_eventSystem.sendNavigationEvents = value;
-            }
-        }
+        private GUISkin skin;
 
-        private Queue<ConsoleGuiEntry> m_entries = new Queue<ConsoleGuiEntry>();
-        private int m_currentEXECUTIONhistoryIndex = 0;
         private ConsoleBackend m_backend;
         private bool m_consoleShown;
-        private bool m_inputTargeted;
-        private Vector3 m_posTarget;
+        private bool drawConsole;
+        private bool consoleWasOpened;
+        private bool InputToggleConsole = false;
+        private bool GUIToggleConsole = false;
+        private bool moveToEnd = false;
+
+        private int consoleSize;
+        private float ConsoleHeight
+        {
+            get
+            {
+                switch (consoleSize)
+                {
+                    case 1:
+                    return Screen.height / 3F;
+                    case 2:
+                    return Screen.height / 2F;
+                    case 3:
+                    return (Screen.height / 2F) + (Screen.height / 4F);
+
+                }
+
+                return Screen.height / 3F;
+            }
+        }
+
+
         private float m_lerpTime;
-        private bool m_darkLine;
-        private bool m_inputactive;
-        private static EventSystem m_eventSystem;
-        private GameObject m_selected;
-        private ConsoleGuiEntry m_lastEntry;
+        private Rect rect_console;
+        private float console_targetPosition;
+        private float console_currentPosition;
+        private Vector2 consoleScrollPosition;
+        private float ClosedPosition => -(ConsoleHeight + 20F);
+        private Rect inputFieldRect => new Rect(5, rect_console.y + rect_console.height + 5, 400, skin.textField.CalcHeight(new GUIContent("Input"), 50));
+        private int currentSuggestionIndex = -1;
+        private string currentSuggestion;
+        private int currentCommandHistoryIndex = -1;
 
+        private string console_input;
 
-        internal void Initialize(ConsoleBackend backend, Options options) {
-            if (!gameObject.activeSelf) {
-                return;
+        private const string INPUT_FIELD_NAME = "ifield";
+        private GUIStyle suggestionStyle;
+        private GUIStyle suggestionActiveStyle;
+        private Texture2D img_box;
+        private StringBuilder sb = new StringBuilder();
+
+        private string greycolorstr;
+
+        private struct MsgData
+        {
+            public string msg;
+            public int count;
+
+            public MsgData(string str)
+            {
+                msg = str;
+                count = 0;
             }
+        }
 
-            m_eventSystem = GameObject.FindObjectOfType<EventSystem>();
-            this.m_backend = backend;
-            this.m_options = options;
-            m_consoleRoot.anchorMin = new Vector2(0f, 0.65f);
-            m_consoleRoot.anchorMax = new Vector2(1f, 1f);
-            m_posTarget = new Vector2(0, 10000);
-            m_inputField.onValueChanged.AddListener(DrawAutoCompleteSuggestions);
-            m_inputField.onEndEdit.AddListener(HandleInput);
+        private List<MsgData> msgHistory = new List<MsgData>();
+
+        internal ConsoleGui(ConsoleBackend backend, Options options)
+        {
+            skin = options.skin;
+
+            greycolorstr = ConsoleUtility.ToHex(options.colors.suggestionGreyed);
+            suggestionStyle = skin.customStyles.Where(x => x.name == "suggestion").FirstOrDefault();
+            suggestionActiveStyle = skin.customStyles.Where(x => x.name == "suggestionActive").FirstOrDefault();
+            img_box = skin.customStyles.Where(x => x.name == "img_box").FirstOrDefault().normal.background;
+            m_backend = backend;
+            m_options = options;
+
             m_backend.OnWriteLine += OnWriteLine;
-            m_backend.OnExecutedCommand += OnExecutedLine;
-            m_backend.RegisterCommand("clear", "clear the console log", this, Clear);
-            Console.DestroyChildren(m_consoleContent.transform);
-            m_historyRoot.gameObject.SetActive(false);
-            m_beastConsoleHelp = m_beastConsoleHelp;
+            SetSize(PlayerPrefs.GetInt("beastconsole.size"));
+            console_currentPosition = ClosedPosition;
+            console_targetPosition = ClosedPosition;
 
-            Console.AddVariable<bool>("console.showHelp", "Shows the info box in the console", x => m_beastConsoleHelp = x, this);
+
+            m_backend.RegisterVariable<int>(SetSize, this, "console.size", "Set the size of the console, 1/2/3");
         }
 
-        private void OnEnable() {
-            StartCoroutine(SetScrollBarToZero());
+        private void SetSize(int size)
+        {
+            consoleSize = Mathf.Clamp(size, 1, 3);
+            PlayerPrefs.SetInt("beastconsole.size", size);
         }
 
-        private void HandleInput(string text) {
-            if (Input.GetKeyDown(KeyCode.Return)) {
-                if (text.Length == 0)
-                    return;
-                m_inputField.text = "";
-                m_inputField.ActivateInputField();
-                m_backend.ExecuteLine(text);
-            }
-        }
+        internal void Update()
+        {
+            rect_console = new Rect(0, 0, Screen.width, ConsoleHeight);
+            consoleWasOpened = false;
 
-        private void DrawAutoCompleteSuggestions(string str) {
-            if (string.IsNullOrEmpty(str)) {
-                if (m_autocompleteRoot.childCount > 0)
-                    Console.DestroyChildren(m_autocompleteRoot);
-                return;
-            }
+            InputToggleConsole = Input.GetKeyDown(m_options.ConsoleKey);
 
-            Console.DestroyChildren(m_autocompleteRoot);
-            var results = m_backend.m_commandsTrie.GetByPrefix(str);
+            if (InputToggleConsole || GUIToggleConsole)
+            {
+                GUIToggleConsole = false;
+                InputToggleConsole = false;
 
-            foreach (var item in results) {
-                var go = Instantiate(m_autocompleteEntryTemplate, m_autocompleteRoot, false);
-                go.GetComponentInChildren<AutoCompleteGuiEntry>().Initialize(item.Value, this);
-                var button = go.GetComponent<Button>();
-            }
-            SetupNavigation(m_autocompleteRoot);
-        }
+                // Do Open
+                if (!m_consoleShown)
+                {
+                    console_targetPosition = 0F;
 
-        private void SetupNavigation(Transform transform) {
-            int index = 0;
-            if (transform.childCount > 1) {
-                foreach (Transform tr in transform) {
-                    var button = tr.GetComponent<Selectable>();
-                    var nav = button.navigation;
-                    if (index == 0) {
-                        nav.selectOnDown = transform.GetChild(1).GetComponent<Selectable>();
-                    }
-                    else
-                        if (index == transform.childCount - 1) {
-                        nav.selectOnUp = transform.GetChild(transform.childCount - 2).GetComponent<Selectable>();
-                    }
-                    else {
-                        nav.selectOnDown = transform.GetChild(index + 1).GetComponent<Selectable>();
-                        nav.selectOnUp = transform.GetChild(index - 1).GetComponent<Selectable>();
-                    }
+                    if (OnStateChanged != null)
+                        OnStateChanged(true);
+                    m_lerpTime = 0;
+                    m_consoleShown = true;
+                    console_input = "";
+                    consoleWasOpened = true;
 
-                    button.navigation = nav;
-                    index++;
+                    ScrollToBottom();
+                }
+                else
+                {
+
+                    m_lerpTime = 0;
+
+                    console_targetPosition = ClosedPosition;
+
+                    m_consoleShown = false;
+                    if (OnStateChanged != null)
+                        OnStateChanged(false);
                 }
             }
+
+            if (m_lerpTime < m_options.TweenTime - 0.01f)
+            {
+                m_lerpTime += Time.deltaTime;
+                m_lerpTime = Mathf.Clamp(m_lerpTime, 0f, m_options.TweenTime);
+                console_currentPosition = Mathf.Lerp(
+                    console_currentPosition,
+                    console_targetPosition,
+                    Remap(m_lerpTime, 0f, m_options.TweenTime, 0f, 1f));
+
+                rect_console = new Rect(0, console_currentPosition, rect_console.width, rect_console.height);
+
+                drawConsole = !Mathf.Approximately(console_currentPosition, ClosedPosition);
+
+            }
         }
 
-        private Vector2 GetLocalCaretPosition() {
-            TextGenerator gen = m_inputField.textComponent.cachedTextGenerator;
-            UICharInfo charInfo = gen.characters[m_inputField.caretPosition];
-            float x = (charInfo.cursorPos.x + charInfo.charWidth) / m_inputField.textComponent.pixelsPerUnit;
-            float y = (charInfo.cursorPos.y) / m_inputField.textComponent.pixelsPerUnit;
-            return new Vector2(x, y);
+        internal void OnGUI()
+        {
+            if (!drawConsole)
+                return;
+
+            GUI.skin = skin;
+            DrawConsole();
+            if (m_consoleShown)
+                ControlInputField();
         }
 
-        /// <summary>
-        /// Clears out the console log
-        /// </summary>
-        /// <example> 
-        /// <code>
-        /// SmartConsole.Clear();
-        /// </code>
-        /// </example>
-        internal void Clear(string[] parameters) {
-            //we dont want to clear our history, instead we clear the screen
-            //s_outputHistory.Clear();
-            Console.DestroyChildren(m_consoleContent.transform);
+        private void DrawConsole()
+        {
+            GUI.Box(rect_console, "Beast console");
+            if (m_consoleShown)
+                DrawHistory();
         }
 
-        private float Remap(float value, float from1, float to1, float from2, float to2) {
+        private void ControlInputField()
+        {
+            Event e = Event.current;
+
+
+            if (!consoleWasOpened && e.type == EventType.KeyDown && e.keyCode == m_options.ConsoleKey)
+            {
+                GUI.FocusControl(null);
+                GUIToggleConsole = true;
+                e.Use();
+                return;
+            }
+
+            if (e.type == EventType.KeyDown)
+            {
+                if (GUI.GetNameOfFocusedControl() == INPUT_FIELD_NAME)
+                {
+                    if (e.keyCode == KeyCode.Return)
+                    {
+                        e.Use();
+                        if (currentSuggestionIndex == -1)
+                        {
+                            if (!string.IsNullOrEmpty(console_input))
+                            {
+                                try
+                                {
+                                    HandleInput(console_input);
+                                }
+                                finally
+                                {
+                                    console_input = "";
+                                    ScrollToBottom();
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (!string.IsNullOrEmpty(currentSuggestion))
+                            {
+                                try
+                                {
+                                    HandleInput(currentSuggestion);
+                                }
+                                finally
+                                {
+                                    currentSuggestion = null;
+                                    currentSuggestionIndex = -1;
+                                    console_input = "";
+                                    ScrollToBottom();
+                                }
+                            }
+                        }
+                    }
+                    else if (e.keyCode == KeyCode.Tab)
+                    {
+                        e.Use();
+                        if (currentSuggestionIndex == -1)
+                        {
+                            AutoComplete(console_input);
+                            moveToEnd = true;
+                        }
+                        else
+                        {
+                            console_input = currentSuggestion;
+                            moveToEnd = true;
+                        }
+                    }
+                    else if (e.keyCode == KeyCode.DownArrow)
+                    {
+                        e.Use();
+                        if (currentCommandHistoryIndex == -1)
+                        {
+                            currentSuggestionIndex++;
+                            currentCommandHistoryIndex = -1;
+                        }
+                        else if (currentCommandHistoryIndex > -1)
+                        {
+                            currentCommandHistoryIndex--;
+                            SetCmdHistoryItem();
+                            moveToEnd = true;
+                        }
+                    }
+                    else if (e.keyCode == KeyCode.UpArrow)
+                    {
+                        e.Use();
+                        if (currentSuggestionIndex != -1)
+                        {
+                            currentSuggestionIndex--;
+                            currentCommandHistoryIndex = -1;
+                        }
+                        else
+                        {
+                            currentCommandHistoryIndex++;
+                            SetCmdHistoryItem();
+                            moveToEnd = true;
+                        }
+                    }
+                    else if (e.isKey)
+                    {
+                        currentSuggestionIndex = -1;
+                        currentCommandHistoryIndex = -1;
+                    }
+                }
+            }
+
+
+            DrawInputField();
+            DrawAutoCompleteSuggestions(console_input);
+
+            if (consoleWasOpened)
+            {
+                GUI.FocusControl(INPUT_FIELD_NAME);
+            }
+
+        }
+
+        private void SetCmdHistoryItem()
+        {
+            var cmdhis = m_backend.m_commandHistory;
+            var count = cmdhis.Count;
+            currentCommandHistoryIndex = Mathf.Clamp(currentCommandHistoryIndex, -1, count - 1);
+            if (count == 0 || currentCommandHistoryIndex < 0)
+                return;
+
+            console_input = cmdhis[cmdhis.Count - currentCommandHistoryIndex - 1];
+        }
+
+        private void DrawInputField()
+        {
+            GUI.SetNextControlName(INPUT_FIELD_NAME);
+            Rect inputField = inputFieldRect;
+            Vector2 size = skin.textField.CalcSize(new GUIContent(console_input));
+
+            if (inputField.width < size.x)
+            {
+                inputField.width = size.x + 10F;
+            }
+
+            console_input = GUI.TextField(inputField, console_input);
+            if (moveToEnd)
+            {
+                TextEditor txt = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+                txt.text = console_input;
+                txt.MoveLineEnd();
+                moveToEnd = false;
+            }
+        }
+
+        private void OnWriteLine(string str)
+        {
+            int count = msgHistory.Count;
+            if (count != 0)
+            {
+                var lastMsgData = msgHistory[msgHistory.Count - 1];
+                if (lastMsgData.msg == str)
+                {
+                    lastMsgData.count++;
+                    msgHistory[msgHistory.Count - 1] = lastMsgData;
+                }
+                else
+                {
+                    msgHistory.Add(new MsgData(str));
+                }
+            }
+            else
+            {
+                msgHistory.Add(new MsgData(str));
+            }
+
+            ScrollToBottom();
+        }
+
+        private void DrawAutoCompleteSuggestions(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+            {
+                return;
+            }
+
+            var results = m_backend.m_commandsTrie.GetByPrefix(str);
+            var count = results.Count();
+
+            if (currentSuggestionIndex > count - 1)
+                currentSuggestionIndex = 0;
+
+            var inputrect = InputFieldBottom();
+            int num = 0;
+            foreach (var item in results)
+            {
+                int length = ConsoleUtility.WrapInColor(greycolorstr, console_input, out string result);
+                sb.Clear();
+                sb.Append(result);
+                sb.Append(item.Value);
+                sb.Remove(length, console_input.Length);
+                string value = sb.ToString();
+
+                Vector2 size = suggestionStyle.CalcSize(new GUIContent(value));
+                Rect pos = new Rect(inputrect.x, inputrect.y + size.y * num, size.x, size.y);
+
+                string description = null;
+                if (m_backend.m_masterDictionary.TryGetValue(item.Value, out Command cmd))
+                {
+                    description = cmd.m_description;
+                }
+
+                if (currentSuggestionIndex == num)
+                {
+                    currentSuggestion = item.Value;
+                    GUI.Label(pos, item.Value, suggestionActiveStyle);
+                }
+                else
+                {
+                    GUI.Label(pos, value, suggestionStyle);
+                }
+
+                if (!string.IsNullOrEmpty(description))
+                {
+                    var descriptionSize = suggestionStyle.CalcSize(new GUIContent(description));
+
+                    if (currentSuggestionIndex == num)
+                    {
+                        GUI.Label(new Rect(pos.x + pos.width + 5F, pos.y, descriptionSize.x, descriptionSize.y), description, suggestionStyle);
+                    }
+                    else
+                    {
+                        GUI.color = new Color(1, 1, 1, 0.5F);
+                        GUI.Label(new Rect(pos.x + pos.width + 5F, pos.y, descriptionSize.x, descriptionSize.y), description, suggestionStyle);
+                        GUI.color = new Color(1, 1, 1, 1);
+                    }
+                }
+
+                num++;
+            }
+        }
+
+        private void DrawHistory()
+        {
+            var list = msgHistory;
+            int count = list.Count;
+
+            float totalHeight = GetHistoryContentHeight();
+
+            Rect historyRect = rect_console;
+
+            Rect viewRect = new Rect(historyRect.x, historyRect.y, historyRect.width - 10, totalHeight);
+
+
+
+            consoleScrollPosition = GUI.BeginScrollView(historyRect, consoleScrollPosition, viewRect);
+            {
+                float currentYPos = (historyRect.height > viewRect.height ? historyRect.height : viewRect.height);
+
+                for (int i = count - 1; i >= 0; i--)
+                {
+                    var msgData = list[i];
+                    string msg = (msgData.count > 0) ? msgData.msg + "   x" + msgData.count : msgData.msg;
+                    float height = CalcHeightForLine(msg);
+                    var rect = new Rect(0, currentYPos -= height, viewRect.width, height);
+                    if (i % 2 == 0)
+                    {
+                        GUI.DrawTexture(new Rect(0F, rect.y, Screen.width, rect.height), img_box);
+                    }
+
+                    GUI.Label(rect, msg);
+                }
+            }
+            GUI.EndScrollView();
+
+        }
+
+
+        private void ScrollToBottom()
+        {
+            consoleScrollPosition = new Vector2(0, GetHistoryContentHeight());
+        }
+
+        private float CalcHeightForLine(string line)
+        {
+            return skin.label.CalcHeight(new GUIContent(line), Screen.width);
+        }
+
+        private Rect InputFieldBottom()
+        {
+            Rect rect = inputFieldRect;
+            Vector2 size = skin.textField.CalcSize(new GUIContent(console_input));
+
+            return new Rect(rect.x, rect.y + size.y + 5F, 0, 0);
+        }
+
+        private Rect CaretPosition()
+        {
+            Rect rect = inputFieldRect;
+            Vector2 size = skin.textField.CalcSize(new GUIContent(console_input));
+
+            return new Rect(rect.x + size.x, rect.y + size.y + 5F, 0, 0);
+        }
+
+        private float GetHistoryContentHeight()
+        {
+            float totalHeight = 0F;
+            var list = m_backend.m_outputHistory;
+            int count = list.Count;
+            for (int i = 0; i < count; i++)
+            {
+                var cmd = list[i];
+                totalHeight += CalcHeightForLine(cmd);
+            }
+            return totalHeight;
+        }
+
+        private void HandleInput(string text)
+        {
+            m_backend.ExecuteLine(text);
+        }
+
+
+
+
+        public static Rect RectWithPadding(Rect rect, int padding)
+        {
+            return new Rect(rect.x + padding, rect.y + padding, rect.width - padding - padding, rect.height - padding - padding);
+        }
+
+        private float Remap(float value, float from1, float to1, float from2, float to2)
+        {
             return (value - from1) / (to1 - from1) * (to2 - from2) + from2;
         }
 
-        private void Update() {
 
-            if (!gameObject.activeSelf) {
-                return;
-            }
 
-            HandleInput();
 
-            if (s_showConsole) {
-                if (!m_consoleShown) {
-                    m_consoleRoot.gameObject.SetActive(true);
-                    m_inputField.gameObject.SetActive(true);
-                    m_autocompleteRoot.gameObject.SetActive(true);
-                    if (!m_inputTargeted) {
-                        m_inputField.Select();
-                        m_inputField.ActivateInputField();
-                        m_inputTargeted = true;
-                    }
-                    m_posTarget = Vector2.zero;
-                    m_lerpTime = 0;
-                    m_consoleShown = true;
-                    NavigationAllowed = false;
-
-                }
-                else {
-                    m_autocompleteRoot.gameObject.SetActive(false);
-                    m_inputField.text = "";
-                    m_inputField.gameObject.SetActive(false);
-                    m_inputTargeted = false;
-                    m_posTarget = new Vector2(0, -m_consoleRoot.rect.y * 2);
-                    m_lerpTime = 0;
-                    m_scrollBar.value = 0;
-                    m_consoleShown = false;
-                    NavigationAllowed = true;
-                }
-            }
-
-            if (m_inputField.isFocused) {
-                if (Input.GetKeyDown(KeyCode.Tab)) {
-                    AutoComplete(m_inputField.text);
-                }
-            }
-
-            s_showConsole = false;
-
-            if (m_lerpTime < m_options.TweenTime - 0.01f) {
-                m_lerpTime += Time.deltaTime;
-                m_lerpTime = Mathf.Clamp(m_lerpTime, 0f, m_options.TweenTime);
-                m_consoleRoot.anchoredPosition = Vector3.Lerp(m_consoleRoot.anchoredPosition, m_posTarget, Remap(m_lerpTime, 0f, m_options.TweenTime, 0f, 1f));
-                if (Vector3.Distance(m_consoleRoot.anchoredPosition, new Vector2(0, -m_consoleRoot.rect.y * 2)) < 0.01f)
-                    m_consoleRoot.gameObject.SetActive(false);
-            }
-
-            if (m_historyRoot.gameObject.activeSelf && !HistoryGuiEntry.s_selected) {
-                m_historyRoot.gameObject.SetActive(false);
-                SelectInput();
-
-            }
-        }
-
-        private void HandleInput() {
-
-            m_selected = m_eventSystem.currentSelectedGameObject;
-            m_inputactive = m_inputField.gameObject == m_selected && m_inputField.isFocused;
-
-            if (Input.GetKeyDown(m_options.ConsoleKey)) {
-                s_showConsole = true;
-                m_currentEXECUTIONhistoryIndex = m_backend.m_commandHistory.Count - 1;
-                m_inputField.text = "";
-            }
-            else
-            if (Input.GetKeyDown(KeyCode.UpArrow)) {
-                if (m_inputactive) {
-                    DrawHistory();
-                    if (m_historyRoot.childCount > 0)
-                        m_eventSystem.SetSelectedGameObject(m_historyRoot.GetChild(m_historyRoot.childCount - 1).gameObject);
-                }
-                else {
-                    if (m_selected) {
-                        var selectable = m_selected.GetComponent<Selectable>();
-                        if (selectable.navigation.selectOnUp != null)
-                            m_eventSystem.SetSelectedGameObject(selectable.navigation.selectOnUp.gameObject);
-                    }
-                }
-            }
-
-            else
-            if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Backspace)) {
-                delete_back_to_dot();
-            }
-
-            else
-            if (Input.GetKeyDown(KeyCode.DownArrow)) {
-                if (m_inputactive) {
-                    if (m_inputField.text != string.Empty) {
-                        EventSystem.current.SetSelectedGameObject(SelectAutoComplete());
-                    }
-                }
-                else {
-                    if (m_selected) {
-                        var selectable = m_selected.GetComponent<Selectable>();
-                        if (selectable.navigation.selectOnDown != null)
-                            m_eventSystem.SetSelectedGameObject(selectable.navigation.selectOnDown.gameObject);
-                    }
-                }
-            }
-            else
-                if (Input.GetKeyDown(KeyCode.Return)) {
-                if (m_inputactive) {
-
-                }
-                else {
-                    sendSubmitEvent();
-                }
-            }
-            else
-                if (Input.GetKey(KeyCode.LeftArrow)) {
-                if (m_inputactive) {
-
-                }
-                else {
-                    SelectInput();
-                }
-            }
-            else
-                if (Input.GetKey(KeyCode.RightArrow)) {
-                if (m_inputactive) {
-
-                }
-                else {
-                    sendSubmitEvent();
-                }
-            }
-            else
-                if (Input.GetKey(KeyCode.Tab)) {
-                if (m_inputactive) {
-
-                }
-                else {
-                    sendSubmitEvent();
-                }
-            }
-            else
-            if (Input.anyKeyDown) {
-                if (m_inputactive) {
-
-                }
-                else {
-                    SelectInput();
-                }
-            }
-        }
-
-        private void sendSubmitEvent() {
-            if (m_selected) {
-                var guibase = m_selected.GetComponent<GuiBase>();
-                if (guibase != null)
-                    ((ISubmitHandler)guibase).OnSubmit(null);
-            }
-        }
-
-        private GameObject SelectAutoComplete() {
-            if (m_autocompleteRoot.childCount > 0) {
-                return m_autocompleteRoot.GetChild(0).gameObject;
-            }
-            else
-                return null;
-        }
-
-        private void DrawHistory() {
-
-            m_historyRoot.gameObject.SetActive(true);
-
-            Console.DestroyChildren(m_historyRoot);
-
-            var list = m_backend.m_commandHistory;
-
-            int liststart = Mathf.Clamp(list.Count - 20, 0, list.Count);
-
-            for (int i = liststart; i < list.Count; i++) {
-                var go = Instantiate(m_historyEntryTemplate, m_historyRoot, false);
-                go.GetComponentInChildren<HistoryGuiEntry>().Initialize(list[i], this);
-            }
-
-            SetupNavigation(m_historyRoot);
-
-        }
-
-        internal void SelectInput() {
-            m_inputField.Select();
-            m_inputField.ActivateInputField();
-            m_inputField.selectionAnchorPosition = 0;
-            m_inputField.selectionFocusPosition = 0;
-            m_inputField.MoveTextEnd(false);
-            //m_inputField.ActivateInputField();
-        }
-
-        internal void OnWriteLine(string message) {
-            ConsoleGuiEntry entry = null;
-            if (m_entries.Count > m_options.MaxConsoleLines) {
-                entry = m_entries.Dequeue().GetComponent<ConsoleGuiEntry>();
-                m_entries.Enqueue(entry);
-                entry.transform.SetAsLastSibling();
-            }
-            else {
-                entry = Instantiate(m_entryTemplate).GetComponent<ConsoleGuiEntry>();
-                m_entries.Enqueue(entry);
-                entry.transform.SetParent(m_consoleContent.transform, true);
-                entry.transform.SetAsLastSibling();
-            }
-            entry.Clear();
-            entry.Initialize(message, m_options.LinePadding, m_darkLine);
-            m_darkLine = !m_darkLine;
-            m_lastEntry = entry;
-            StartCoroutine(SetScrollBarToZero());
-        }
-
-        private void OnExecutedLine(string line, Command command) {
-            if (m_lastEntry.Text == line)
-                m_lastEntry.SetCommand(command);
-            m_currentEXECUTIONhistoryIndex = m_backend.m_commandHistory.Count - 1;
-        }
-
-        private IEnumerator SetScrollBarToZero() {
-            int i = 0;
-            while (i < 4) {
-                i++;
-                m_scrollBar.value = 0;
-                yield return null;
-            }
-            m_scrollBar.value = 0;
-            yield break;
-        }
-
-        private void delete_back_to_dot() {
-            string text = m_inputField.text;
-            if (text.Contains(".")) {
-                int index = text.LastIndexOf('.');
-                int length = text.Length - index;
-                text = text.Remove(index + 1, length - 1);
-            }
-            else {
-                text = "";
-            }
-            m_inputField.text = text;
-        }
-
-        private void AutoComplete(string input) {
+        private void AutoComplete(string input)
+        {
             string[] lookup = m_backend.CComParameterSplit(input);
-            if (lookup.Length == 0) {
+            if (lookup.Length == 0)
+            {
                 // don't auto complete if we have typed any parameters so far or nothing at all...
                 return;
             }
@@ -437,69 +544,43 @@
             // only complete to the next dot if there is one present in the completion string which
             // we don't already have in the lookup string
             int dotIndex = 0;
-            do {
+            do
+            {
                 dotIndex = nearestMatch.m_name.IndexOf(".", dotIndex + 1);
             }
             while ((dotIndex > 0) && (dotIndex < lookup[0].Length));
             string insertion = nearestMatch.m_name;
-            if (dotIndex >= 0) {
+            if (dotIndex >= 0)
+            {
                 insertion = nearestMatch.m_name.Substring(0, dotIndex + 1);
             }
-            if (insertion.Length < input.Length) {
-                do {
-                    if (AutoCompleteTailString("true", input))
-                        break;
-                    if (AutoCompleteTailString("false", input))
-                        break;
-                    if (AutoCompleteTailString("True", input))
-                        break;
-                    if (AutoCompleteTailString("False", input))
-                        break;
-                    if (AutoCompleteTailString("TRUE", input))
-                        break;
-                    if (AutoCompleteTailString("FALSE", input))
-                        break;
-                }
-                while (false);
+            if (insertion.Length < input.Length)
+            {
+                //do
+                //{
+                //    if (AutoCompleteTailString("true", input))
+                //        break;
+                //    if (AutoCompleteTailString("false", input))
+                //        break;
+                //    if (AutoCompleteTailString("True", input))
+                //        break;
+                //    if (AutoCompleteTailString("False", input))
+                //        break;
+                //    if (AutoCompleteTailString("TRUE", input))
+                //        break;
+                //    if (AutoCompleteTailString("FALSE", input))
+                //        break;
+                //}
+                //while (false);
             }
             else if (insertion.Length >= input.Length) // SE - is this really correct?
             {
-                m_inputField.text = insertion;
+                console_input = insertion;
             }
             if (insertion[insertion.Length - 1] != '.')
-                m_inputField.text = insertion + " ";
-            m_inputField.caretPosition = m_inputField.text.Length;
+                console_input = insertion;
         }
 
-        private bool AutoCompleteTailString(string tailString, string input) {
-            for (int i = 1; i < tailString.Length; ++i) {
-                if (input.EndsWith(" " + tailString.Substring(0, i))) {
-                    m_inputField.text = input.Substring(0, input.Length - 1) + tailString.Substring(i - 1);
-                    return true;
-                }
-            }
-            return false;
-        }
 
-        private void OnDestroy() {
-            StopAllCoroutines();
-        }
-
-        private void OnDisable() {
-            NavigationAllowed = true;
-        }
-
-        internal void SetInputText(string text) {
-            m_inputField.text = text;
-        }
-
-        private T GetInterface<T>(GameObject inObj) where T : class {
-            if (!typeof(T).IsInterface) {
-                Debug.LogError(typeof(T).ToString() + ": is not an actual interface!");
-                return null;
-            }
-            var objs = inObj.GetComponents<Component>();
-            return objs.OfType<T>().FirstOrDefault();
-        }
     }
 }

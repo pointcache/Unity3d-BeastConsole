@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using BeastConsole;
 using UnityEngine;
 
+[ConsoleParse]
 public class AttributeTest : MonoBehaviour {
 
     [ConsoleVariable("testvar", "")]

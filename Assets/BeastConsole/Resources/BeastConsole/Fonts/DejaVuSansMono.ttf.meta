@@ -1,21 +1,23 @@
 fileFormatVersion: 2
-guid: bbc94a057e0e7054fa594f7ed41899b2
-timeCreated: 1474403944
-licenseType: Free
+guid: 458c9354c373bb84b8f358a7c97ab64f
 TrueTypeFontImporter:
+  externalObjects: {}
   serializedVersion: 4
-  fontSize: 20
+  fontSize: 60
   forceTextureCase: -2
   characterSpacing: 0
   characterPadding: 1
   includeFontData: 1
-  fontName: Droid Sans Mono
+  fontName: DejaVu Sans Mono
   fontNames:
-  - Droid Sans Mono
-  fallbackFontReferences: []
+  - DejaVu Sans Mono
+  fallbackFontReferences:
+  - {instanceID: 0}
   customCharacters: 
-  fontRenderingMode: 1
+  fontRenderingMode: 0
   ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
   userData: 
   assetBundleName: 
   assetBundleVariant: 
