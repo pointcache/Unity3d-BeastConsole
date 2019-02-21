@@ -3,41 +3,41 @@
 
 # Beast Console
 
-![screen](https://kek.gg/i/3zZFVr.png)
-![screen](https://kek.gg/i/7K8kgq.gif)
+![screen](https://i.imgur.com/HwZk4ZJ.jpg)
 
+
+![Video](https://www.youtube.com/watch?v=nmFolz6C8Tk)
 
 This project is possible because of the effort of amazing people at Cranium Software
 this project is based of SmartConsole https://github.com/CraniumSoftware/SmartConsole
 
 BeastConsole is evolution (hopefully) of SmartConsole,
-It is made with uGui.
 
-BeastConsole is:
-  * Console - user works with this class
-  * Console backend (SmartConsole)- a backend allowing command registration and variables
-  * Console ui - prefabs implementing console display
 
 # Console
-* Backend is created by folks at CraniumSoftware, heavily cleaned up and refactored.
-* Use attributes to bind methods/fields/properties 
+* Backend is created by folks at CraniumSoftware.
+* Use attributes to bind members 
 * Register your own arbitrary commands/methods for any object(non monob as well) and provide parameters
 * Autocomplete
 * Both commands and variables support any number of subscribers, modify all objects at once.
 * Multiline
 * Suggestions
 * History
-* Out of the box support for RVar(not included)  https://github.com/pointcache/unity-reactive-var
+* ConsoleUtility class containing methods to draw tables. (You can actually use ConsoleUtility pretty much by itself instead of Console class).
 
 # Usage
 
 setup:
- * drop EventSystem in scene, add BeastConsole to game object, launch - done.
+	Drop Console prefab in scene, change parameters to your liking.
  
 Attributes:
 
+Console uses reflection to find attributes, to speed up the whole process we should mark any class that has uses console 
+attributes with `[ConsoleParse]` attribute.
+
 ```csharp
 
+[ConsoleParse]
 public class AttributeTest : MonoBehaviour {
 
     [ConsoleVariable("testvar", "")]
@@ -91,8 +91,3 @@ Manual method requires you to unregister commands and variables when done with a
 
 See Example folder for more examples.
 
-
-
-
-# TODO:
- check Projects page
