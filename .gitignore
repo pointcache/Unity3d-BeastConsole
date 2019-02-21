@@ -10,6 +10,8 @@
 /Assets/rVar
 /Assets/rVar.meta
 sysinfo.txt
+ProjectSettings/
+Logs/
  
 # ===================================== #
 # Visual Studio / MonoDevelop generated #
@@ -44,4 +46,3 @@ ehthumbs.db
 
 
 
-ProjectSettings/
