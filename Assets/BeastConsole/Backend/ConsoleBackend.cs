@@ -76,8 +76,7 @@
             RegisterCommand("list", "lists all currently registered console variables", this, ListCvars);
             RegisterCommand("print", "writes <string> to the console log", this, Echo);
             RegisterCommand("quit", "quit the game (not sure this works with iOS/Android)", this, Quit);
-            RegisterCommand("clear", "clear the console log", this, Clear);
-            RegisterCommand("clr", "clear the console log", this, Clear);
+
             // RegisterCommand("help", "displays help information for console command where available", this, Help);
             // RegisterCommand("callstack.warning", "display the call stack for the last warning message", LastWarningCallStack);
             // RegisterCommand("callstack.error", "display the call stack for the last error message", LastErrorCallStack);
@@ -467,19 +466,6 @@
             }
         }
 
-        /// <summary>
-        /// Clears out the console log
-        /// </summary>
-        /// <example> 
-        /// <code>
-        /// SmartConsole.Clear();
-        /// </code>
-        /// </example>
-        internal void Clear(string[] parameters)
-        {
-            //we dont want to clear our history, instead we clear the screen
-            m_outputHistory.Clear();
-            WriteLine("Console cleared.");
-        }
+
     }
 }

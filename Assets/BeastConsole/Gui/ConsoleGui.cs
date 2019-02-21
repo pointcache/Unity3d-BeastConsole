@@ -120,6 +120,7 @@
 
 
             m_backend.RegisterVariable<int>(SetSize, this, "console.size", "Set the size of the console, 1/2/3");
+            m_backend.RegisterCommand("clr", "clear the console log", this, Clear);
         }
 
         private void SetSize(int size)
@@ -581,6 +582,18 @@
                 console_input = insertion;
         }
 
-
+        /// <summary>
+        /// Clears out the console log
+        /// </summary>
+        /// <example> 
+        /// <code>
+        /// SmartConsole.Clear();
+        /// </code>
+        /// </example>
+        internal void Clear(string[] parameters)
+        {
+            //we dont want to clear our history, instead we clear the screen
+            msgHistory.Clear();
+        }
     }
 }
