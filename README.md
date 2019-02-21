@@ -8,6 +8,8 @@
 
 ![Video](https://www.youtube.com/watch?v=nmFolz6C8Tk)
 
+## Recently updated to remove any trace of UGUI. Now its pure IMGUI, with no additional clutter.
+
 This project is possible because of the effort of amazing people at Cranium Software
 this project is based of SmartConsole https://github.com/CraniumSoftware/SmartConsole
 
